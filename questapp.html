@@ -2228,21 +2228,23 @@ function checkWarnings(){
   const wknd  = isWeekend();
 
   // Morgenadvarsel kl. 07:00 (hverdag) / 09:30 (weekend)
-  const mWarnTime = wknd ? 9*60+30 : 7*60+0;
-  const mDone     = S.morningDone.length >= MQ.length;
-  const mStarted  = S.morningStarted;
+  const mWarnTime   = wknd ? 9*60+30 : 7*60+0;
+  const mExpireTime = wknd ? 10*60+0 : 7*60+15; // deadline = udløb
+  const mDone       = S.morningDone.length >= MQ.length;
+  const mStarted    = S.morningStarted;
 
-  if(mins >= mWarnTime && !mDone && !mStarted && warnDismissed.morning !== today){
+  if(mins >= mWarnTime && mins < mExpireTime && !mDone && !mStarted && warnDismissed.morning !== today){
     showWarn('morning');
     return;
   }
 
   // Aftenadvarsel kl. 19:45
-  const eWarnTime = 19*60+45;
-  const eDone     = S.eveningDone.length >= EQ.length;
-  const eStarted  = S.eveningStarted;
+  const eWarnTime   = 19*60+45;
+  const eExpireTime = wknd ? 22*60+0 : 20*60+0; // deadline = udløb
+  const eDone       = S.eveningDone.length >= EQ.length;
+  const eStarted    = S.eveningStarted;
 
-  if(mins >= eWarnTime && !eDone && !eStarted && warnDismissed.evening !== today){
+  if(mins >= eWarnTime && mins < eExpireTime && !eDone && !eStarted && warnDismissed.evening !== today){
     showWarn('evening');
     return;
   }
