@@ -1,0 +1,2698 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuestHome</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap');
+
+  :root {
+    --bg: #0f0e1a;
+    --surface: #1a1830;
+    --surface2: #221f3a;
+    --surface3: #2a2648;
+    --accent: #f7c948;
+    --accent2: #ff6b6b;
+    --accent3: #6bffb8;
+    --accent4: #7b8cff;
+    --text: #f0eeff;
+    --text2: #a89fc4;
+    --border: rgba(255,255,255,0.08);
+    --glow: rgba(247,201,72,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image: 
+      radial-gradient(ellipse at 20% 50%, rgba(123,140,255,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(247,201,72,0.05) 0%, transparent 50%);
+  }
+
+  /* Stars background */
+  .stars {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    background: white;
+    animation: twinkle var(--d) ease-in-out infinite;
+    opacity: 0;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0; transform: scale(1); }
+    50% { opacity: var(--o); transform: scale(1.3); }
+  }
+
+  .app {
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+    padding-bottom: 90px;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    padding: 20px 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    font-family: 'Fredoka One', cursive;
+    font-size: 26px;
+    background: linear-gradient(135deg, var(--accent), #ff9d4d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 1px;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .streak-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface2);
+    border: 1px solid rgba(255,107,107,0.3);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-weight: 800;
+    font-size: 15px;
+    color: #ff6b6b;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .streak-badge:hover { border-color: #ff6b6b; }
+  .streak-icon { font-size: 18px; }
+  .avatar-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent4), #a78bff);
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .avatar-btn:hover { transform: scale(1.1); }
+
+  /* ─── LEVEL CARD ─── */
+  .level-card {
+    margin: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .level-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(123,140,255,0.08), rgba(247,201,72,0.05));
+    pointer-events: none;
+  }
+  .level-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .level-info {}
+  .level-title {
+    font-size: 12px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 700;
+  }
+  .level-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    color: var(--accent);
+    line-height: 1.2;
+    margin-top: 2px;
+  }
+  .level-badge {
+    background: linear-gradient(135deg, var(--accent4), #a78bff);
+    border-radius: 16px;
+    padding: 8px 14px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(123,140,255,0.4);
+  }
+  .level-badge-label { font-size: 10px; font-family: 'Nunito', sans-serif; opacity: 0.8; font-weight: 700; }
+  .xp-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .xp-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text2);
+  }
+  .xp-value {
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .progress-track {
+    height: 12px;
+    background: var(--surface3);
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent4), var(--accent));
+    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+  }
+  @keyframes shimmer { to { left: 100%; } }
+
+  /* ─── SECTION ─── */
+  .section {
+    padding: 8px 20px;
+  }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    color: var(--text);
+  }
+  .section-tag {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    background: rgba(247,201,72,0.1);
+    border: 1px solid rgba(247,201,72,0.2);
+    padding: 3px 10px;
+    border-radius: 99px;
+  }
+  .see-all {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent4);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+
+  /* ─── DAILY QUESTS ─── */
+  .daily-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .quest-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+  }
+  .quest-card:active { transform: scale(0.98); }
+  .quest-card.completed {
+    opacity: 0.5;
+    border-color: rgba(107,255,184,0.2);
+  }
+  .quest-card.completed .quest-icon-wrap { background: rgba(107,255,184,0.15); }
+  .quest-card:not(.completed):hover {
+    border-color: rgba(123,140,255,0.4);
+    background: var(--surface2);
+    transform: translateY(-1px);
+  }
+  .quest-icon-wrap {
+    width: 52px; height: 52px;
+    min-width: 52px;
+    border-radius: 16px;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    transition: all 0.2s;
+  }
+  .quest-body { flex: 1; }
+  .quest-name {
+    font-weight: 800;
+    font-size: 15px;
+    margin-bottom: 3px;
+  }
+  .quest-desc {
+    font-size: 12px;
+    color: var(--text2);
+    font-weight: 600;
+  }
+  .quest-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+  .xp-pill {
+    background: rgba(247,201,72,0.15);
+    border: 1px solid rgba(247,201,72,0.3);
+    border-radius: 99px;
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .quest-complete-btn {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text2);
+  }
+  .quest-card.completed .quest-complete-btn {
+    background: var(--accent3);
+    border-color: var(--accent3);
+    color: #0f0e1a;
+  }
+  .quest-difficulty {
+    display: flex;
+    gap: 2px;
+  }
+  .diff-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .diff-dot.filled { background: var(--accent); }
+
+  /* ─── BONUS QUEST (mystery) ─── */
+  .mystery-card {
+    margin: 0 20px 10px;
+    background: linear-gradient(135deg, #1e1440, #1a1030);
+    border: 1px solid rgba(167,139,255,0.3);
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+  .mystery-card:hover { border-color: rgba(167,139,255,0.6); transform: translateY(-1px); }
+  .mystery-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 80% 50%, rgba(167,139,255,0.15), transparent 60%);
+    pointer-events: none;
+  }
+  .mystery-icon {
+    width: 52px; height: 52px; min-width: 52px;
+    border-radius: 16px;
+    background: rgba(167,139,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(167,139,255,0.3); }
+    50% { box-shadow: 0 0 0 8px rgba(167,139,255,0); }
+  }
+  .mystery-body { flex: 1; }
+  .mystery-title {
+    font-weight: 800;
+    font-size: 15px;
+    color: #c4b5fd;
+    margin-bottom: 2px;
+  }
+  .mystery-sub { font-size: 12px; color: #8b7ab5; font-weight: 600; }
+  .mystery-badge {
+    background: rgba(167,139,255,0.2);
+    border: 1px solid rgba(167,139,255,0.4);
+    border-radius: 99px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #c4b5fd;
+  }
+
+  /* ─── OPTIONAL QUESTS ─── */
+  .optional-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 4px 20px 8px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .optional-scroll::-webkit-scrollbar { display: none; }
+
+  .optional-card {
+    min-width: 140px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    position: relative;
+  }
+  .optional-card:hover {
+    border-color: rgba(123,140,255,0.4);
+    transform: translateY(-2px);
+  }
+  .optional-card.completed { opacity: 0.4; }
+  .opt-icon {
+    font-size: 32px;
+    width: 60px; height: 60px;
+    border-radius: 18px;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .opt-name { font-size: 13px; font-weight: 800; line-height: 1.2; }
+  .opt-xp {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--accent);
+    background: rgba(247,201,72,0.1);
+    border: 1px solid rgba(247,201,72,0.2);
+    border-radius: 99px;
+    padding: 3px 9px;
+  }
+
+  /* ─── REWARDS ─── */
+  .rewards-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 4px 20px 8px;
+    scrollbar-width: none;
+  }
+  .rewards-scroll::-webkit-scrollbar { display: none; }
+
+  .reward-card {
+    min-width: 130px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .reward-card.locked { opacity: 0.5; }
+  .reward-card.unlocked {
+    border-color: rgba(107,255,184,0.3);
+    background: linear-gradient(135deg, var(--surface), rgba(107,255,184,0.05));
+  }
+  .reward-card.next-up {
+    border-color: rgba(247,201,72,0.4);
+    background: linear-gradient(135deg, var(--surface), rgba(247,201,72,0.05));
+  }
+  .reward-icon-wrap {
+    font-size: 30px;
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .reward-name {
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+  .reward-level {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text2);
+  }
+  .reward-status {
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 9px;
+    border-radius: 99px;
+  }
+  .reward-status.unlocked-tag {
+    color: var(--accent3);
+    background: rgba(107,255,184,0.1);
+    border: 1px solid rgba(107,255,184,0.2);
+  }
+  .reward-status.next-tag {
+    color: var(--accent);
+    background: rgba(247,201,72,0.1);
+    border: 1px solid rgba(247,201,72,0.2);
+  }
+  .reward-status.locked-tag {
+    color: var(--text2);
+    background: var(--surface2);
+  }
+  .lock-icon { font-size: 18px; }
+
+  /* ─── NAV ─── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    background: rgba(26,24,48,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    padding: 10px 20px 16px;
+    display: flex;
+    justify-content: space-around;
+    z-index: 100;
+  }
+  .nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 16px;
+    border-radius: 16px;
+    transition: all 0.2s;
+    color: var(--text2);
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn:hover { color: var(--text); }
+  .nav-icon { font-size: 22px; }
+  .nav-label { font-size: 10px; font-weight: 800; letter-spacing: 0.5px; }
+
+  /* ─── TOAST / XP POPUP ─── */
+  .xp-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 1000;
+    background: var(--surface2);
+    border: 2px solid var(--accent);
+    border-radius: 24px;
+    padding: 28px 40px;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(247,201,72,0.3);
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .xp-popup.show {
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: all;
+  }
+  .popup-emoji { font-size: 50px; display: block; margin-bottom: 8px; }
+  .popup-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 28px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .popup-sub { font-size: 15px; color: var(--text2); font-weight: 700; }
+  .popup-xp {
+    display: inline-block;
+    margin-top: 12px;
+    background: rgba(247,201,72,0.15);
+    border: 2px solid var(--accent);
+    border-radius: 99px;
+    padding: 6px 20px;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--accent);
+  }
+
+  /* ─── MYSTERY REVEAL ─── */
+  .mystery-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .mystery-overlay.show { display: flex; }
+  .mystery-box {
+    background: linear-gradient(135deg, #1e1440, #1a1030);
+    border: 2px solid rgba(167,139,255,0.5);
+    border-radius: 28px;
+    padding: 40px 32px;
+    text-align: center;
+    max-width: 300px;
+    width: 90%;
+    box-shadow: 0 0 80px rgba(167,139,255,0.3);
+    animation: box-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes box-appear {
+    from { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+    to { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  .mystery-box-icon {
+    font-size: 70px;
+    display: block;
+    margin-bottom: 16px;
+    animation: wobble 0.6s ease 0.3s both;
+  }
+  @keyframes wobble {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(-15deg) scale(1.2); }
+    50% { transform: rotate(10deg) scale(1.1); }
+    75% { transform: rotate(-5deg) scale(1.05); }
+    100% { transform: rotate(0deg) scale(1); }
+  }
+  .mystery-box-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 26px;
+    color: #c4b5fd;
+    margin-bottom: 8px;
+  }
+  .mystery-box-reward {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+  .mystery-close {
+    background: rgba(167,139,255,0.2);
+    border: 1px solid rgba(167,139,255,0.4);
+    color: #c4b5fd;
+    border-radius: 99px;
+    padding: 10px 28px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: all 0.2s;
+  }
+  .mystery-close:hover { background: rgba(167,139,255,0.35); }
+
+  /* ─── EDIT QUEST MODAL ─── */
+  .edit-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 550;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .edit-overlay.show { display: flex; }
+  .edit-sheet {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 28px 28px 0 0;
+    padding: 24px 20px 36px;
+    width: 100%;
+    max-width: 430px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slide-up 0.35s cubic-bezier(0.34,1.2,0.64,1);
+  }
+  @keyframes slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .edit-sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--surface3);
+    border-radius: 99px;
+    margin: 0 auto 20px;
+  }
+  .edit-sheet-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .edit-sheet-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .edit-save {
+    flex: 1;
+    background: linear-gradient(135deg, var(--accent4), #a78bff);
+    border: none; border-radius: 14px;
+    padding: 14px; font-size: 15px; font-weight: 900;
+    font-family: 'Nunito', sans-serif;
+    color: white; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .edit-save:hover { opacity: 0.9; }
+  .edit-cancel {
+    background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 20px; font-size: 15px; font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text2); cursor: pointer;
+    transition: all 0.2s;
+  }
+  .edit-cancel:hover { background: var(--surface3); }
+
+  /* ─── USED REWARD ─── */
+  .reward-card.used {
+    opacity: 0.45;
+    filter: grayscale(0.6);
+  }
+  .reward-card.used .reward-icon-wrap { position: relative; }
+  .used-stamp {
+    position: absolute;
+    top: -4px; right: -4px;
+    background: var(--accent2);
+    border-radius: 99px;
+    font-size: 12px;
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--surface);
+  }
+  .reward-status.used-tag {
+    color: var(--text2);
+    background: var(--surface2);
+    text-decoration: line-through;
+  }
+  /* edit pencil btn on admin quest items */
+  .aqi-edit {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    background: rgba(123,140,255,0.1);
+    border: 1px solid rgba(123,140,255,0.2);
+    color: var(--accent4);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .aqi-edit:hover { background: rgba(123,140,255,0.2); }
+  .aqi-actions { display: flex; gap: 6px; }
+  /* reward used toggle in admin */
+  .aqi-used {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    background: rgba(247,201,72,0.1);
+    border: 1px solid rgba(247,201,72,0.2);
+    color: var(--accent);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .aqi-used:hover { background: rgba(247,201,72,0.2); }
+  .aqi-used.is-used {
+    background: rgba(255,107,107,0.1);
+    border-color: rgba(255,107,107,0.3);
+    color: var(--accent2);
+  }
+
+  /* ─── STREAK MODAL ─── */
+  .streak-modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .streak-modal-overlay.show { display: flex; }
+  .streak-modal {
+    background: var(--surface);
+    border: 2px solid rgba(255,107,107,0.3);
+    border-radius: 28px;
+    padding: 32px 28px;
+    text-align: center;
+    max-width: 320px;
+    width: 90%;
+    box-shadow: 0 0 80px rgba(255,107,107,0.2);
+    animation: box-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .streak-flames {
+    font-size: 50px;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .streak-modal-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 32px;
+    color: #ff6b6b;
+    margin-bottom: 6px;
+  }
+  .streak-modal-sub {
+    font-size: 14px; color: var(--text2); font-weight: 600; margin-bottom: 20px;
+  }
+  .streak-days-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .streak-day {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800;
+    background: var(--surface2);
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+  .streak-day.done {
+    background: rgba(255,107,107,0.2);
+    border-color: rgba(255,107,107,0.4);
+    color: #ff6b6b;
+  }
+  .streak-milestones {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+    text-align: left;
+  }
+  .milestone {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: 14px;
+    font-size: 13px; font-weight: 700;
+  }
+  .milestone.reached { border: 1px solid rgba(107,255,184,0.3); color: var(--accent3); }
+  .milestone.next { border: 1px solid rgba(247,201,72,0.3); color: var(--accent); }
+  .milestone-icon { font-size: 20px; }
+  .streak-close {
+    background: rgba(255,107,107,0.15);
+    border: 1px solid rgba(255,107,107,0.3);
+    color: #ff6b6b;
+    border-radius: 99px;
+    padding: 10px 28px;
+    font-size: 15px; font-weight: 800;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .streak-close:hover { background: rgba(255,107,107,0.25); }
+
+  /* ─── STATS PAGE ─── */
+  .stats-page { display: none; padding: 16px 20px; }
+  .stats-page.visible { display: block; }
+  .stats-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-value {
+    font-family: 'Fredoka One', cursive;
+    font-size: 32px;
+    color: var(--accent);
+  }
+  .stat-label { font-size: 12px; color: var(--text2); font-weight: 700; margin-top: 2px; }
+  .history-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+  .week-compare {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .week-compare-title { font-size: 13px; color: var(--text2); font-weight: 700; margin-bottom: 10px; }
+  .week-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 80px;
+  }
+  .week-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .week-bar-wrap { flex: 1; display: flex; align-items: flex-end; width: 100%; }
+  .week-bar {
+    width: 100%;
+    border-radius: 6px 6px 0 0;
+    background: var(--surface3);
+    transition: height 0.6s ease;
+    position: relative;
+  }
+  .week-bar.current { background: linear-gradient(180deg, var(--accent), #ff9d4d); }
+  .week-bar.prev { background: var(--surface3); }
+  .week-day-label { font-size: 10px; color: var(--text2); font-weight: 700; }
+  .compare-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(107,255,184,0.1);
+    border: 1px solid rgba(107,255,184,0.2);
+    border-radius: 99px;
+    padding: 8px 16px;
+    font-size: 14px; font-weight: 800;
+    color: var(--accent3);
+    margin-top: 12px;
+  }
+
+  /* PARTICLES */
+  .particle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 999;
+    font-size: 20px;
+    animation: particle-fly var(--dur) ease forwards;
+  }
+  @keyframes particle-fly {
+    0% { transform: translate(0,0) rotate(0deg) scale(1); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0); opacity: 0; }
+  }
+
+  /* Divider */
+  .spacer { height: 6px; }
+
+  /* Admin toggle */
+  .admin-section {
+    margin: 0 20px;
+    background: var(--surface2);
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 16px;
+  }
+  .admin-title { font-size: 12px; color: var(--text2); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+  .admin-row { display: flex; gap: 8px; align-items: center; }
+  .admin-input {
+    flex: 1;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px; font-family: 'Nunito', sans-serif; font-weight: 700;
+    color: var(--text);
+    outline: none;
+  }
+  .admin-input:focus { border-color: rgba(123,140,255,0.5); }
+  .admin-add {
+    background: var(--accent4);
+    border: none;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 14px; font-weight: 800; font-family: 'Nunito', sans-serif;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .admin-add:hover { background: #a78bff; }
+
+  /* ─── SPIN WHEEL ─── */
+  .wheel-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.92);
+    backdrop-filter: blur(16px);
+    z-index: 700;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+  .wheel-overlay.show { display: flex; }
+
+  .wheel-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 28px;
+    color: var(--accent);
+    margin-bottom: 6px;
+    text-align: center;
+    animation: pulse-title 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse-title {
+    0%,100% { text-shadow: 0 0 10px rgba(247,201,72,0.4); }
+    50%      { text-shadow: 0 0 30px rgba(247,201,72,0.9); }
+  }
+  .wheel-sub {
+    font-size: 14px; font-weight: 700;
+    color: var(--text2);
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .wheel-wrap {
+    position: relative;
+    width: 300px; height: 300px;
+    margin-bottom: 20px;
+  }
+  .wheel-canvas { border-radius: 50%; display: block; }
+  .wheel-pointer {
+    position: absolute;
+    top: -18px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 36px;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.8));
+    z-index: 2;
+    pointer-events: none;
+  }
+  .wheel-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 4px solid white;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .spin-btn {
+    background: linear-gradient(135deg, var(--accent), #ff9d4d);
+    border: none; border-radius: 99px;
+    padding: 16px 48px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    color: #0f0e1a;
+    cursor: pointer;
+    box-shadow: 0 6px 28px rgba(247,201,72,0.45);
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .spin-btn:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 8px 36px rgba(247,201,72,0.6); }
+  .spin-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+  .wheel-result {
+    margin-top: 20px;
+    text-align: center;
+    min-height: 80px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 6px;
+  }
+  .wheel-result-emoji { font-size: 48px; }
+  .wheel-result-label {
+    font-family: 'Fredoka One', cursive;
+    font-size: 24px;
+    color: var(--accent);
+  }
+  .wheel-result-sub { font-size: 14px; color: var(--text2); font-weight: 700; }
+  .wheel-close {
+    margin-top: 16px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 10px 32px;
+    font-size: 15px; font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: none;
+  }
+  .wheel-close.visible { display: block; }
+  .wheel-close:hover { background: rgba(255,255,255,0.15); color: var(--text); }
+
+  /* Daily quests — no XP pill, show checkmark progress instead */
+  .daily-progress-bar {
+    margin: 0 20px 4px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .daily-prog-track {
+    flex: 1; height: 8px;
+    background: var(--surface3);
+    border-radius: 99px; overflow: hidden;
+  }
+  .daily-prog-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent3), var(--accent));
+    transition: width 0.5s cubic-bezier(0.34,1.2,0.64,1);
+  }
+  .daily-prog-label {
+    font-size: 12px; font-weight: 800;
+    color: var(--text2); white-space: nowrap;
+  }
+  .spin-unlock-banner {
+    margin: 6px 20px 0;
+    background: linear-gradient(135deg, rgba(247,201,72,0.12), rgba(255,157,77,0.08));
+    border: 1px solid rgba(247,201,72,0.3);
+    border-radius: 14px;
+    padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    animation: glow-banner 2s ease-in-out infinite;
+  }
+  .spin-unlock-banner:hover { border-color: var(--accent); }
+  @keyframes glow-banner {
+    0%,100% { box-shadow: 0 0 0 0 rgba(247,201,72,0.1); }
+    50%      { box-shadow: 0 0 16px 2px rgba(247,201,72,0.2); }
+  }
+  .spin-unlock-icon { font-size: 28px; }
+  .spin-unlock-text { font-size: 13px; font-weight: 800; color: var(--accent); }
+  .spin-unlock-sub  { font-size: 11px; color: var(--text2); font-weight: 600; margin-top: 1px; }
+</style>
+
+  /* ─── ADMIN PANEL ─── */
+  .admin-page { display: none; padding: 0 0 20px; }
+  .admin-page.visible { display: block; }
+
+  .admin-header {
+    padding: 20px 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .admin-back {
+    width: 36px; height: 36px;
+    border-radius: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; cursor: pointer; transition: all 0.2s;
+    color: var(--text);
+  }
+  .admin-back:hover { background: var(--surface3); }
+  .admin-page-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 24px;
+    background: linear-gradient(135deg, #ff9d4d, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .admin-lock-badge {
+    margin-left: auto;
+    background: rgba(255,107,107,0.1);
+    border: 1px solid rgba(255,107,107,0.3);
+    border-radius: 99px;
+    padding: 4px 12px;
+    font-size: 12px; font-weight: 800;
+    color: #ff6b6b;
+  }
+
+  /* Tabs */
+  .admin-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 0 20px 16px;
+  }
+  .admin-tab {
+    flex: 1;
+    padding: 10px 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    font-size: 13px; font-weight: 800;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    font-family: 'Nunito', sans-serif;
+  }
+  .admin-tab.active {
+    background: rgba(123,140,255,0.15);
+    border-color: rgba(123,140,255,0.4);
+    color: var(--accent4);
+  }
+
+  /* Create quest form */
+  .admin-form {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label {
+    font-size: 11px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--text2);
+  }
+  .form-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    font-size: 15px; font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .form-input:focus { border-color: rgba(123,140,255,0.5); }
+  .form-input::placeholder { color: var(--text2); opacity: 0.6; }
+
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-group { flex: 1; }
+
+  /* Emoji picker */
+  .emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+  }
+  .emoji-opt {
+    aspect-ratio: 1;
+    background: var(--surface2);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .emoji-opt:hover { background: var(--surface3); }
+  .emoji-opt.selected {
+    border-color: var(--accent4);
+    background: rgba(123,140,255,0.15);
+  }
+
+  /* Day picker */
+  .day-picker {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+  .day-btn {
+    flex: 1;
+    min-width: 36px;
+    padding: 8px 4px;
+    background: var(--surface2);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    font-size: 12px; font-weight: 800;
+    color: var(--text2);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    font-family: 'Nunito', sans-serif;
+  }
+  .day-btn:hover { background: var(--surface3); }
+  .day-btn.selected {
+    background: rgba(123,140,255,0.2);
+    border-color: var(--accent4);
+    color: var(--accent4);
+  }
+  .day-btn.all-days {
+    background: rgba(247,201,72,0.1);
+    border-color: rgba(247,201,72,0.3);
+    color: var(--accent);
+    flex: 2;
+  }
+  .day-btn.all-days.selected {
+    background: rgba(247,201,72,0.2);
+    border-color: var(--accent);
+  }
+
+  /* XP slider */
+  .xp-slider-wrap { position: relative; }
+  .xp-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 99px;
+    background: var(--surface3);
+    outline: none;
+    cursor: pointer;
+  }
+  .xp-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent4), var(--accent));
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(123,140,255,0.5);
+  }
+  .xp-display {
+    text-align: center;
+    margin-top: 8px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 28px;
+    color: var(--accent);
+  }
+  .xp-display span { font-size: 14px; font-family: 'Nunito', sans-serif; color: var(--text2); font-weight: 700; }
+
+  /* Difficulty radio */
+  .diff-picker { display: flex; gap: 8px; }
+  .diff-opt {
+    flex: 1;
+    padding: 10px 6px;
+    background: var(--surface2);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 12px; font-weight: 800;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text2);
+  }
+  .diff-opt:hover { background: var(--surface3); }
+  .diff-opt.d1.selected { border-color: var(--accent3); color: var(--accent3); background: rgba(107,255,184,0.1); }
+  .diff-opt.d2.selected { border-color: var(--accent); color: var(--accent); background: rgba(247,201,72,0.1); }
+  .diff-opt.d3.selected { border-color: var(--accent2); color: var(--accent2); background: rgba(255,107,107,0.1); }
+
+  /* Quest type toggle */
+  .type-toggle { display: flex; gap: 8px; }
+  .type-btn {
+    flex: 1;
+    padding: 11px;
+    background: var(--surface2);
+    border: 2px solid transparent;
+    border-radius: 14px;
+    font-size: 13px; font-weight: 800;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text2);
+  }
+  .type-btn.selected {
+    background: rgba(123,140,255,0.15);
+    border-color: var(--accent4);
+    color: var(--accent4);
+  }
+
+  /* Submit button */
+  .admin-submit {
+    background: linear-gradient(135deg, var(--accent4), #a78bff);
+    border: none;
+    border-radius: 16px;
+    padding: 16px;
+    font-size: 16px; font-weight: 900;
+    font-family: 'Nunito', sans-serif;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    box-shadow: 0 4px 20px rgba(123,140,255,0.3);
+    margin-top: 4px;
+  }
+  .admin-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(123,140,255,0.4); }
+  .admin-submit:active { transform: scale(0.98); }
+
+  /* Quest list in admin */
+  .admin-quest-list { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+  .admin-quest-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .aqi-icon {
+    width: 44px; height: 44px; min-width: 44px;
+    border-radius: 13px;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .aqi-body { flex: 1; }
+  .aqi-name { font-weight: 800; font-size: 14px; margin-bottom: 3px; }
+  .aqi-meta { font-size: 11px; color: var(--text2); font-weight: 600; display: flex; gap: 8px; flex-wrap: wrap; }
+  .aqi-tag {
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 10px; font-weight: 800;
+    background: rgba(123,140,255,0.1);
+    border: 1px solid rgba(123,140,255,0.2);
+    color: var(--accent4);
+  }
+  .aqi-tag.daily { background: rgba(247,201,72,0.1); border-color: rgba(247,201,72,0.2); color: var(--accent); }
+  .aqi-tag.optional { background: rgba(107,255,184,0.1); border-color: rgba(107,255,184,0.2); color: var(--accent3); }
+  .aqi-delete {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    background: rgba(255,107,107,0.1);
+    border: 1px solid rgba(255,107,107,0.2);
+    color: #ff6b6b;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .aqi-delete:hover { background: rgba(255,107,107,0.2); }
+
+  /* Divider */
+  .admin-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 20px 16px;
+  }
+  .admin-section-label {
+    padding: 0 20px 10px;
+    font-size: 11px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--text2);
+  }
+  .empty-list {
+    text-align: center;
+    padding: 30px;
+    color: var(--text2);
+    font-size: 14px; font-weight: 600;
+  }
+
+  /* PIN overlay */
+  .pin-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 600;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .pin-overlay.show { display: flex; }
+  .pin-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 36px 28px;
+    text-align: center;
+    max-width: 300px; width: 90%;
+    animation: box-appear 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .pin-icon { font-size: 44px; margin-bottom: 12px; }
+  .pin-title { font-family: 'Fredoka One', cursive; font-size: 24px; margin-bottom: 4px; }
+  .pin-sub { font-size: 13px; color: var(--text2); font-weight: 600; margin-bottom: 20px; }
+  .pin-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
+  .pin-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--surface3);
+    border: 2px solid var(--border);
+    transition: all 0.2s;
+  }
+  .pin-dot.filled { background: var(--accent4); border-color: var(--accent4); }
+  .pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+  .pin-key {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 20px; font-weight: 800;
+    font-family: 'Fredoka One', cursive;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pin-key:hover { background: var(--surface3); }
+  .pin-key:active { transform: scale(0.92); }
+  .pin-key.del { font-size: 16px; font-family: 'Nunito', sans-serif; }
+  .pin-error { color: #ff6b6b; font-size: 13px; font-weight: 700; min-height: 20px; }
+  .pin-cancel {
+    background: none; border: none;
+    color: var(--text2); font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: 'Nunito', sans-serif;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<!-- XP Popup -->
+<div class="xp-popup" id="xpPopup">
+  <span class="popup-emoji" id="popupEmoji">⭐</span>
+  <div class="popup-title" id="popupTitle">Quest fuldført!</div>
+  <div class="popup-sub" id="popupSub">Godt klaret!</div>
+  <div class="popup-xp" id="popupXp">+50 XP</div>
+</div>
+
+<!-- Mystery Overlay -->
+<div class="mystery-overlay" id="mysteryOverlay">
+  <div class="mystery-box">
+    <span class="mystery-box-icon" id="mysteryBoxIcon">🎁</span>
+    <div class="mystery-box-title">Mystery Reward!</div>
+    <div class="mystery-box-reward" id="mysteryBoxReward">Du vinder 20 kr!</div>
+    <button class="mystery-close" onclick="closeMystery()">🎉 Sej! Luk</button>
+  </div>
+</div>
+
+<!-- Streak Modal -->
+<div class="streak-modal-overlay" id="streakModal">
+  <div class="streak-modal">
+    <span class="streak-flames">🔥🔥🔥</span>
+    <div class="streak-modal-title" id="streakModalTitle">5 dage!</div>
+    <div class="streak-modal-sub">Din nuværende streak</div>
+    <div class="streak-days-row" id="streakDaysRow"></div>
+    <div class="streak-milestones">
+      <div class="milestone reached"><span class="milestone-icon">🏅</span> 3 dage – +30 bonus XP ✓</div>
+      <div class="milestone next"><span class="milestone-icon">🔥</span> 5 dage – +50 bonus XP (næste!)</div>
+      <div class="milestone"><span class="milestone-icon">👑</span> 7 dage – Valgfri aftensmad</div>
+    </div>
+    <button class="streak-close" onclick="closeStreak()">Luk</button>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- MAIN PAGE -->
+  <div class="main-page" id="mainPage">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">⚔️ QuestHome</div>
+      <div class="header-right">
+        <div class="streak-badge" onclick="openStreak()">
+          <span class="streak-icon">🔥</span>
+          <span id="streakCount">5</span>
+        </div>
+        <div class="avatar-btn">🧙</div>
+      </div>
+    </div>
+
+    <!-- Level Card -->
+    <div class="level-card">
+      <div class="level-top">
+        <div class="level-info">
+          <div class="level-title">Nuværende rang</div>
+          <div class="level-name" id="levelName">Hushjælperen</div>
+        </div>
+        <div class="level-badge">
+          <div id="levelNum">5</div>
+          <div class="level-badge-label">LEVEL</div>
+        </div>
+      </div>
+      <div class="xp-row">
+        <span class="xp-text">XP: <span class="xp-value" id="currentXP">340</span></span>
+        <span class="xp-text">Næste level: <span class="xp-value" id="nextLevelXP">500</span></span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width: 68%"></div>
+      </div>
+    </div>
+
+    <!-- Dagens Missioner -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">⚡ Dagens Missioner</div>
+        <span class="section-tag" id="dailyTag">0/3 klaret</span>
+      </div>
+      <div class="daily-progress-bar">
+        <div class="daily-prog-track">
+          <div class="daily-prog-fill" id="dailyProgFill" style="width:0%"></div>
+        </div>
+        <div class="daily-prog-label" id="dailyProgLabel">0 / 3</div>
+      </div>
+      <div class="daily-grid" id="dailyGrid"></div>
+    </div>
+
+    <!-- Spin unlock banner (hidden until all daily done) -->
+    <div class="spin-unlock-banner" id="spinBanner" style="display:none" onclick="openWheel()">
+      <div class="spin-unlock-icon">🎡</div>
+      <div>
+        <div class="spin-unlock-text">Lykkehjulet er låst op!</div>
+        <div class="spin-unlock-sub">Tryk her for at spinne og vinde en præmie</div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- Valgfrie Quests -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">🗡️ Ekstra Quests</div>
+        <button class="see-all" onclick="scrollOptional()">Se alle</button>
+      </div>
+    </div>
+    <div class="optional-scroll" id="optionalScroll"></div>
+
+    <!-- Rewards -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">🏆 Belønninger</div>
+      </div>
+    </div>
+    <div class="rewards-scroll" id="rewardsScroll"></div>
+
+    <!-- Admin: Tilføj reward -->
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+
+  </div>
+
+  <!-- STATS PAGE -->
+  <div class="stats-page" id="statsPage">
+    <div class="stats-title">📊 Din progress</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="statTotalXP">340</div>
+        <div class="stat-label">Total XP</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statLevel">5</div>
+        <div class="stat-label">Level</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statStreak">5</div>
+        <div class="stat-label">🔥 Streak dage</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statCompleted">12</div>
+        <div class="stat-label">Quests fuldført</div>
+      </div>
+    </div>
+
+    <div class="history-title">📈 Denne uge vs. forrige</div>
+    <div class="week-compare">
+      <div class="week-compare-title">XP per dag</div>
+      <div class="week-bars" id="weekBars"></div>
+      <div class="compare-badge">⬆️ +42% bedre end forrige uge!</div>
+    </div>
+  </div>
+
+  <!-- ADMIN PAGE -->
+  <div class="admin-page" id="adminPage">
+    <div class="admin-header">
+      <button class="admin-back" onclick="showPage('home')">←</button>
+      <div class="admin-page-title">⚙️ Admin Panel</div>
+      <div class="admin-lock-badge">🔒 Forældre</div>
+    </div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" id="tabCreate" onclick="switchAdminTab('create')">➕ Ny opgave</button>
+      <button class="admin-tab" id="tabQuests" onclick="switchAdminTab('quests')">📋 Opgaver</button>
+      <button class="admin-tab" id="tabRewardsMgr" onclick="switchAdminTab('rewards')">🏆 Belønninger</button>
+    </div>
+    <!-- CREATE QUEST TAB -->
+    <div id="adminCreate">
+      <div class="admin-form">
+        <div class="form-group">
+          <div class="form-label">Opgavenavn</div>
+          <input class="form-input" id="qName" placeholder="Fx: Ryd opvaskemaskinen" />
+        </div>
+        <div class="form-group">
+          <div class="form-label">Beskrivelse (valgfri)</div>
+          <input class="form-input" id="qDesc" placeholder="Fx: Tøm og fyld den igen" />
+        </div>
+        <div class="form-group">
+          <div class="form-label">Ikon</div>
+          <div class="emoji-grid" id="emojiGrid"></div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">XP belønning</div>
+          <input type="range" class="xp-slider" id="qXP" min="10" max="150" step="10" value="50" oninput="updateXPDisplay()" />
+          <div class="xp-display"><span>+</span><span id="xpVal">50</span> <span>XP</span></div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Type</div>
+          <div class="type-toggle">
+            <button class="type-btn selected" id="typeDailyBtn" onclick="selectType('daily')">⚡ Daglig mission</button>
+            <button class="type-btn" id="typeOptBtn" onclick="selectType('optional')">🗡️ Ekstra quest</button>
+          </div>
+        </div>
+        <div class="form-group" id="dayPickerGroup">
+          <div class="form-label">Aktiv på dage</div>
+          <div class="day-picker">
+            <button class="day-btn all-days selected" id="dayAll" onclick="toggleAllDays()">Alle dage</button>
+            <button class="day-btn" data-day="1" onclick="toggleDay(1)">Man</button>
+            <button class="day-btn" data-day="2" onclick="toggleDay(2)">Tir</button>
+            <button class="day-btn" data-day="3" onclick="toggleDay(3)">Ons</button>
+            <button class="day-btn" data-day="4" onclick="toggleDay(4)">Tor</button>
+            <button class="day-btn" data-day="5" onclick="toggleDay(5)">Fre</button>
+            <button class="day-btn" data-day="6" onclick="toggleDay(6)">Lør</button>
+            <button class="day-btn" data-day="7" onclick="toggleDay(7)">Søn</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Sværhedsgrad</div>
+          <div class="diff-picker">
+            <button class="diff-opt d1 selected" id="diff1" onclick="selectDiff(1)">⭐ Let</button>
+            <button class="diff-opt d2" id="diff2" onclick="selectDiff(2)">⭐⭐ Mellem</button>
+            <button class="diff-opt d3" id="diff3" onclick="selectDiff(3)">⭐⭐⭐ Svær</button>
+          </div>
+        </div>
+        <button class="admin-submit" onclick="createQuest()">✨ Opret quest</button>
+      </div>
+    </div>
+    <!-- QUEST LIST TAB -->
+    <div id="adminQuests" style="display:none">
+      <div class="admin-section-label">⚡ Daglige missioner</div>
+      <div class="admin-quest-list" id="adminDailyList"></div>
+      <div style="height:16px"></div>
+      <div class="admin-section-label">🗡️ Ekstra quests</div>
+      <div class="admin-quest-list" id="adminOptList"></div>
+    </div>
+    <!-- REWARDS TAB -->
+    <div id="adminRewardsMgr" style="display:none">
+      <div class="admin-form">
+        <div class="form-group">
+          <div class="form-label">Belønningsnavn</div>
+          <input class="form-input" id="rewardInput2" placeholder="Fx: Vælg aftensmad 🍕" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <div class="form-label">Level krav</div>
+            <input class="form-input" id="rewardLevelInput2" type="number" placeholder="Fx: 5" min="1" max="10" />
+          </div>
+          <div class="form-group">
+            <div class="form-label">Ikon</div>
+            <input class="form-input" id="rewardIcon2" placeholder="🎁" style="text-align:center;font-size:22px" />
+          </div>
+        </div>
+        <button class="admin-submit" onclick="addRewardFromAdmin()">✨ Tilføj belønning</button>
+      </div>
+      <div style="height:16px"></div>
+      <div class="admin-section-label">Aktive belønninger</div>
+      <div class="admin-quest-list" id="adminRewardList"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" id="navHome" onclick="showPage('home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Hjem</span>
+    </button>
+    <button class="nav-btn" id="navStats" onclick="showPage('stats')">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Stats</span>
+    </button>
+    <button class="nav-btn" id="navRewards" onclick="showPage('home'); setTimeout(()=>document.getElementById('rewardsScroll').scrollIntoView({behavior:'smooth'}), 100)">
+      <span class="nav-icon">🏆</span>
+      <span class="nav-label">Rewards</span>
+    </button>
+    <button class="nav-btn" id="navAdmin" onclick="openAdminPin()">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Admin</span>
+    </button>
+  </div>
+
+</div><!-- end .app -->
+
+<!-- SPIN WHEEL OVERLAY -->
+<div class="wheel-overlay" id="wheelOverlay">
+  <div class="wheel-title">🎡 Lykkehjulet!</div>
+  <div class="wheel-sub">Du klarede alle dagens missioner! Spin og vind!</div>
+  <div class="wheel-wrap">
+    <div class="wheel-pointer">▼</div>
+    <canvas class="wheel-canvas" id="wheelCanvas" width="300" height="300"></canvas>
+    <div class="wheel-center"></div>
+  </div>
+  <button class="spin-btn" id="spinBtn" onclick="spinWheel()">🎲 SPIN!</button>
+  <div class="wheel-result" id="wheelResult"></div>
+  <button class="wheel-close" id="wheelClose" onclick="closeWheel()">Luk og fortsæt →</button>
+</div>
+
+<!-- EDIT QUEST MODAL -->
+<div class="edit-overlay" id="editOverlay" onclick="closeEditIfBg(event)">
+  <div class="edit-sheet" id="editSheet">
+    <div class="edit-sheet-handle"></div>
+    <div class="edit-sheet-title">
+      <span id="editSheetIcon">✏️</span>
+      Rediger quest
+    </div>
+
+    <div class="admin-form" style="padding:0;gap:12px">
+      <div class="form-group">
+        <div class="form-label">Opgavenavn</div>
+        <input class="form-input" id="editName" placeholder="Navn" />
+      </div>
+      <div class="form-group">
+        <div class="form-label">Beskrivelse</div>
+        <input class="form-input" id="editDesc" placeholder="Beskrivelse" />
+      </div>
+      <div class="form-group">
+        <div class="form-label">Ikon</div>
+        <div class="emoji-grid" id="editEmojiGrid"></div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">XP belønning</div>
+        <input type="range" class="xp-slider" id="editXP" min="10" max="150" step="10" value="50" oninput="document.getElementById('editXpVal').textContent=this.value" />
+        <div class="xp-display"><span>+</span><span id="editXpVal">50</span> <span>XP</span></div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Aktiv på dage</div>
+        <div class="day-picker" id="editDayPicker">
+          <button class="day-btn all-days" id="editDayAll" onclick="editToggleAllDays()">Alle dage</button>
+          <button class="day-btn" data-eday="1" onclick="editToggleDay(1)">Man</button>
+          <button class="day-btn" data-eday="2" onclick="editToggleDay(2)">Tir</button>
+          <button class="day-btn" data-eday="3" onclick="editToggleDay(3)">Ons</button>
+          <button class="day-btn" data-eday="4" onclick="editToggleDay(4)">Tor</button>
+          <button class="day-btn" data-eday="5" onclick="editToggleDay(5)">Fre</button>
+          <button class="day-btn" data-eday="6" onclick="editToggleDay(6)">Lør</button>
+          <button class="day-btn" data-eday="7" onclick="editToggleDay(7)">Søn</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Sværhedsgrad</div>
+        <div class="diff-picker">
+          <button class="diff-opt d1" id="editDiff1" onclick="editSelectDiff(1)">⭐ Let</button>
+          <button class="diff-opt d2" id="editDiff2" onclick="editSelectDiff(2)">⭐⭐ Mellem</button>
+          <button class="diff-opt d3" id="editDiff3" onclick="editSelectDiff(3)">⭐⭐⭐ Svær</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="edit-sheet-actions">
+      <button class="edit-cancel" onclick="closeEdit()">Annuller</button>
+      <button class="edit-save" onclick="saveEdit()">💾 Gem ændringer</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN Overlay -->
+<div class="pin-overlay" id="pinOverlay">
+  <div class="pin-box">
+    <div class="pin-icon">🔐</div>
+    <div class="pin-title">Forældreadgang</div>
+    <div class="pin-sub">Indtast PIN-kode</div>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+      <div class="pin-dot" id="dot3"></div>
+    </div>
+    <div class="pin-keypad">
+      <button class="pin-key" onclick="pinKey('1')">1</button>
+      <button class="pin-key" onclick="pinKey('2')">2</button>
+      <button class="pin-key" onclick="pinKey('3')">3</button>
+      <button class="pin-key" onclick="pinKey('4')">4</button>
+      <button class="pin-key" onclick="pinKey('5')">5</button>
+      <button class="pin-key" onclick="pinKey('6')">6</button>
+      <button class="pin-key" onclick="pinKey('7')">7</button>
+      <button class="pin-key" onclick="pinKey('8')">8</button>
+      <button class="pin-key" onclick="pinKey('9')">9</button>
+      <button class="pin-key del" onclick="pinKey('del')">✕</button>
+      <button class="pin-key" onclick="pinKey('0')">0</button>
+      <button class="pin-key del" onclick="pinKey('ok')">✓</button>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+    <button class="pin-cancel" onclick="closePin()">Annuller</button>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────
+let state = {
+  xp: 0,
+  level: 1,
+  streak: 0,
+  totalCompleted: 0,
+  dailyCompleted: [],
+  optionalCompleted: [],
+};
+
+const levels = [
+  { level: 1,  name: "Begynderen",       xpRequired: 0 },
+  { level: 2,  name: "Hjælperen",        xpRequired: 100 },
+  { level: 3,  name: "Husvennen",        xpRequired: 200 },
+  { level: 4,  name: "Opgavemesteren",   xpRequired: 300 },
+  { level: 5,  name: "Hushjælperen",     xpRequired: 400 },
+  { level: 6,  name: "Kæmperen",         xpRequired: 500 },
+  { level: 7,  name: "Elite Rengøreren", xpRequired: 600 },
+  { level: 8,  name: "Huslegenden",      xpRequired: 700 },
+  { level: 9,  name: "Superhelten",      xpRequired: 800 },
+  { level: 10, name: "HUSKONGEN 👑",     xpRequired: 900 },
+];
+
+const dailyQuests = [
+  { id: "d1", icon: "🛏️", name: "Red din seng", desc: "Gør den klar til aftenen", xp: 20, diff: 1, emoji: "🛏️", days: [1,2,3,4,5,6,7] },
+  { id: "d2", icon: "🍽️", name: "Dæk bordet", desc: "Klar til aftensmad", xp: 25, diff: 1, emoji: "🍽️", days: [1,2,3,4,5,6,7] },
+  { id: "d3", icon: "🧹", name: "Ryd af bord efter aftensmad", desc: "Sæt tallerkener og glas væk", xp: 25, diff: 1, emoji: "🧹", days: [1,2,3,4,5,6,7] },
+];
+
+const optionalQuests = [
+  { id: "o1", icon: "📦", name: "Ryd op på eget værelse", desc: "Gulvet skal kunne ses!", xp: 50, diff: 2, days: [1,2,3,4,5,6,7] },
+  { id: "o2", icon: "🫧", name: "Tøm opvaskemaskinen", desc: "Sæt det hele på plads", xp: 40, diff: 1, days: [1,2,3,4,5,6,7] },
+  { id: "o3", icon: "🍽️", name: "Fyld opvaskemaskinen", desc: "Skrab tallerkener af og sæt dem ind", xp: 35, diff: 1, days: [1,2,3,4,5,6,7] },
+  { id: "o4", icon: "🧴", name: "Tør støv af", desc: "Hylder, borde og tv-bord", xp: 60, diff: 2, days: [1,2,3,4,5,6,7] },
+  { id: "o5", icon: "👕", name: "Tag vasketøj ned fra tørrestativ", desc: "Fold og læg det på plads", xp: 40, diff: 1, days: [1,2,3,4,5,6,7] },
+  { id: "o6", icon: "🧺", name: "Sortér vasketøj", desc: "Lyst for sig, mørkt for sig", xp: 30, diff: 1, days: [1,2,3,4,5,6,7] },
+  { id: "o7", icon: "🗑️", name: "Tøm skraldespande", desc: "Alle rum + ny pose i", xp: 45, diff: 2, days: [1,2,3,4,5,6,7] },
+  { id: "o9",  icon: "🧹", name: "Støvsug eget værelse + stue", desc: "Hele gulvet, også under møbler", xp: 70, diff: 2, days: [1,2,3,4,5,6,7] },
+  { id: "o10", icon: "🪣", name: "Vask gulv", desc: "Fx stue eller værelse", xp: 80, diff: 3, days: [1,2,3,4,5,6,7] },
+  { id: "o11", icon: "🗑️", name: "Gå ud med skrald", desc: "Ned til containeren", xp: 35, diff: 1, days: [1,2,3,4,5,6,7] },
+  { id: "o12", icon: "🍳", name: "Hjælp med madlavning", desc: "Skær grønt, rør rundt eller dæk bord", xp: 60, diff: 2, days: [1,2,3,4,5,6,7] },
+  { id: "o13", icon: "👕", name: "Læg vasketøj sammen", desc: "Fold og sortér i bunker", xp: 45, diff: 1, days: [1,2,3,4,5,6,7] },
+  { id: "o14", icon: "🚿", name: "Gør badeværelse rent", desc: "Spejl og vask skinner", xp: 75, diff: 2, days: [1,2,3,4,5,6,7] },
+  { id: "o15", icon: "🧊", name: "Ryd op i køleskab", desc: "Smid gammelt ud og tør af", xp: 55, diff: 2, days: [1,2,3,4,5,6,7] },
+];
+
+let rewards = [
+  { icon: "🎬", name: "Vælg film aftenen", level: 2 },
+  { icon: "🍕", name: "Vælg aftensmad", level: 4 },
+  { icon: "🌙", name: "1 times sengetid ekstra", level: 6 },
+  { icon: "👥", name: "Ven på besøg", level: 7 },
+  { icon: "🎮", name: "3 timers spiltid", level: 8 },
+  { icon: "👑", name: "Weekend sleepover", level: 10 },
+];
+
+const mysteryRewards = [
+  "10 kr i lommepenge 💰",
+  "Vælg din egen aftensmad 🍕",
+  "Fri for én opgave i morgen 🎉",
+  "20 kr ekstra 💸",
+  "Bio med en ven 🎬",
+  "+100 bonus XP ⭐",
+  "Spil en ekstra time 🎮",
+];
+
+// ─── INIT ───────────────────────────────────────────────────────
+function init() {
+  generateStars();
+  renderDailyQuests();
+  renderOptionalQuests();
+  renderRewards();
+  renderWeekBars();
+  updateHUD();
+  buildStreakDays();
+}
+
+function generateStars() {
+  const container = document.getElementById('stars');
+  for (let i = 0; i < 60; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `
+      width:${size}px;height:${size}px;
+      top:${Math.random()*100}%;
+      left:${Math.random()*100}%;
+      --d:${2+Math.random()*4}s;
+      --o:${0.3+Math.random()*0.7};
+      animation-delay:${Math.random()*4}s;
+    `;
+    container.appendChild(s);
+  }
+}
+
+// ─── RENDER ─────────────────────────────────────────────────────
+function renderDailyQuests() {
+  const grid = document.getElementById('dailyGrid');
+  grid.innerHTML = '';
+  const total = dailyQuests.length;
+  const done = state.dailyCompleted.length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+  document.getElementById('dailyTag').textContent = `${done}/${total} klaret`;
+  document.getElementById('dailyProgFill').style.width = pct + '%';
+  document.getElementById('dailyProgLabel').textContent = `${done} / ${total}`;
+
+  dailyQuests.forEach(q => {
+    const isDone = state.dailyCompleted.includes(q.id);
+    const card = document.createElement('div');
+    card.className = 'quest-card' + (isDone ? ' completed' : '');
+    card.innerHTML = `
+      <div class="quest-icon-wrap">${q.icon}</div>
+      <div class="quest-body">
+        <div class="quest-name">${isDone ? '✅ ' : ''}${q.name}</div>
+        <div class="quest-desc">${q.desc || ''}</div>
+        <div class="quest-difficulty" style="margin-top:4px">
+          ${[1,2,3].map(i => `<div class="diff-dot${i<=q.diff?' filled':''}"></div>`).join('')}
+        </div>
+      </div>
+      <div class="quest-right">
+        <button class="quest-complete-btn" onclick="completeDaily('${q.id}')" ${isDone ? 'disabled' : ''}>
+          ${isDone ? '✓' : '○'}
+        </button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function renderOptionalQuests() {
+  const scroll = document.getElementById('optionalScroll');
+  scroll.innerHTML = '';
+  optionalQuests.forEach(q => {
+    const done = state.optionalCompleted.includes(q.id);
+    const card = document.createElement('div');
+    card.className = 'optional-card' + (done ? ' completed' : '');
+    card.innerHTML = `
+      <div class="opt-icon">${q.icon}</div>
+      <div class="opt-name">${q.name}</div>
+      <div class="opt-xp">${done ? '✓ done' : '+'+q.xp+' XP'}</div>
+    `;
+    if (!done) card.onclick = () => completeOptional(q.id, q.xp, q.name, q.icon);
+    scroll.appendChild(card);
+  });
+}
+
+function renderRewards() {
+  const scroll = document.getElementById('rewardsScroll');
+  scroll.innerHTML = '';
+  rewards.forEach(r => {
+    const unlocked = state.level >= r.level;
+    const next = !unlocked && r.level === state.level + 1;
+    const used = !!r.used;
+    const card = document.createElement('div');
+    card.className = `reward-card ${used ? 'used' : (unlocked ? 'unlocked' : (next ? 'next-up' : 'locked'))}`;
+    card.innerHTML = `
+      <div class="reward-icon-wrap" style="position:relative">
+        ${used ? '<div class="used-stamp">✓</div>' : ''}
+        ${used ? '🎁' : (unlocked ? r.icon : '🔒')}
+      </div>
+      <div class="reward-name">${r.name}</div>
+      <div class="reward-level">Level ${r.level}</div>
+      <div class="reward-status ${used ? 'used-tag' : (unlocked ? 'unlocked-tag' : (next ? 'next-tag' : 'locked-tag'))}">
+        ${used ? '✓ Brugt' : (unlocked ? '✓ Låst op' : (next ? '⭐ Næste!' : 'Låst'))}
+      </div>
+    `;
+    scroll.appendChild(card);
+  });
+}
+
+function renderWeekBars() {
+  const container = document.getElementById('weekBars');
+  const days = ['M','T','O','T','F','L','S'];
+  const current = [30, 80, 50, 120, 70, 0, 0];
+  const prev    = [20, 50, 30, 80,  40, 60, 10];
+  const max = Math.max(...current, ...prev);
+  container.innerHTML = '';
+  days.forEach((d, i) => {
+    const col = document.createElement('div');
+    col.className = 'week-col';
+    const h1 = Math.round((current[i]/max) * 70);
+    const h2 = Math.round((prev[i]/max) * 70);
+    col.innerHTML = `
+      <div class="week-bar-wrap" style="gap:3px;display:flex;align-items:flex-end;width:100%">
+        <div class="week-bar current" style="height:${h1}px;flex:1"></div>
+        <div class="week-bar prev" style="height:${h2}px;flex:1;opacity:0.4"></div>
+      </div>
+      <div class="week-day-label">${d}</div>
+    `;
+    container.appendChild(col);
+  });
+}
+
+function updateHUD() {
+  const lvl = getCurrentLevel();
+  const nextLvl = levels.find(l => l.xpRequired > state.xp);
+  const prevXP = lvl.xpRequired;
+  const nextXP = nextLvl ? nextLvl.xpRequired : prevXP + 500;
+  const pct = Math.min(100, Math.round(((state.xp - prevXP) / (nextXP - prevXP)) * 100));
+
+  document.getElementById('currentXP').textContent = state.xp;
+  document.getElementById('nextLevelXP').textContent = nextXP;
+  document.getElementById('levelName').textContent = lvl.name;
+  document.getElementById('levelNum').textContent = state.level;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('streakCount').textContent = state.streak;
+
+  // Stats page
+  document.getElementById('statTotalXP').textContent = state.xp;
+  document.getElementById('statLevel').textContent = state.level;
+  document.getElementById('statStreak').textContent = state.streak;
+  document.getElementById('statCompleted').textContent = state.totalCompleted;
+}
+
+function getCurrentLevel() {
+  let cur = levels[0];
+  for (const l of levels) {
+    if (state.xp >= l.xpRequired) cur = l;
+  }
+  return cur;
+}
+
+function buildStreakDays() {
+  const row = document.getElementById('streakDaysRow');
+  row.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = document.createElement('div');
+    d.className = 'streak-day' + (i < state.streak ? ' done' : '');
+    d.textContent = i < state.streak ? '🔥' : (i+1);
+    row.appendChild(d);
+  }
+  document.getElementById('streakModalTitle').textContent = state.streak + ' dage i træk!';
+}
+
+// ─── COMPLETE QUEST ──────────────────────────────────────────────
+function completeDaily(id) {
+  if (state.dailyCompleted.includes(id)) return;
+  state.dailyCompleted.push(id);
+  state.totalCompleted++;
+  renderDailyQuests();
+  spawnParticles();
+
+  // Check if ALL daily quests are done
+  if (state.dailyCompleted.length >= dailyQuests.length) {
+    setTimeout(() => {
+      document.getElementById('spinBanner').style.display = 'flex';
+      document.getElementById('spinBanner').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 600);
+  }
+}
+
+function completeOptional(id, xp, name, icon) {
+  if (state.optionalCompleted.includes(id)) return;
+  state.optionalCompleted.push(id);
+  awardXP(xp, name, icon);
+  renderOptionalQuests();
+  spawnParticles();
+}
+
+function awardXP(amount, questName, emoji) {
+  const oldLevel = state.level;
+  state.xp += amount;
+
+  const newLevel = levels.filter(l => state.xp >= l.xpRequired).pop();
+  if (newLevel.level > oldLevel) {
+    state.level = newLevel.level;
+    setTimeout(() => showPopup('🎊', 'LEVEL UP!', `Du er nu Level ${state.level}: ${newLevel.name}`, `+${amount} XP`), 600);
+  } else {
+    showPopup(emoji || '⭐', 'Quest fuldført!', questName, `+${amount} XP`);
+  }
+
+  updateHUD();
+  renderRewards();
+}
+
+// ─── SPIN WHEEL ──────────────────────────────────────────────────
+const WHEEL_SEGMENTS = [
+  { label: '+20 XP',          xp: 20,  color: '#7b8cff', emoji: '⭐' },
+  { label: 'Vælg aftensmad',  xp: 0,   color: '#ff6b6b', emoji: '🍕', special: true },
+  { label: '+50 XP',          xp: 50,  color: '#f7c948', emoji: '🌟' },
+  { label: '+10 XP',          xp: 10,  color: '#6bffb8', emoji: '✨' },
+  { label: '+100 XP',         xp: 100, color: '#a78bff', emoji: '💫' },
+  { label: '30 min ekstra',   xp: 0,   color: '#ff9d4d', emoji: '🎮', special: true },
+  { label: '+30 XP',          xp: 30,  color: '#7b8cff', emoji: '⭐' },
+  { label: '10 kr 💰',        xp: 0,   color: '#f7c948', emoji: '💰', special: true },
+];
+
+let wheelAngle = 0;
+let wheelSpinning = false;
+let wheelSpun = false;
+
+function openWheel() {
+  wheelSpun = false;
+  wheelSpinning = false;
+  document.getElementById('spinBtn').disabled = false;
+  document.getElementById('spinBtn').textContent = '🎲 SPIN!';
+  document.getElementById('wheelResult').innerHTML = '';
+  document.getElementById('wheelClose').classList.remove('visible');
+  document.getElementById('wheelOverlay').classList.add('show');
+  drawWheel(0);
+}
+
+function closeWheel() {
+  document.getElementById('wheelOverlay').classList.remove('show');
+  // Hide the banner after spinning
+  if (wheelSpun) document.getElementById('spinBanner').style.display = 'none';
+}
+
+function drawWheel(angle) {
+  const canvas = document.getElementById('wheelCanvas');
+  const ctx = canvas.getContext('2d');
+  const cx = 150, cy = 150, r = 144;
+  const n = WHEEL_SEGMENTS.length;
+  const arc = (Math.PI * 2) / n;
+
+  ctx.clearRect(0, 0, 300, 300);
+
+  WHEEL_SEGMENTS.forEach((seg, i) => {
+    const start = angle + i * arc - Math.PI / 2;
+    const end = start + arc;
+
+    // Segment fill
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath();
+    ctx.fillStyle = seg.color;
+    ctx.fill();
+
+    // Border
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Text
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + arc / 2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.font = 'bold 13px Nunito, sans-serif';
+    ctx.fillText(seg.label, r - 12, 5);
+    // emoji
+    ctx.font = '16px serif';
+    ctx.fillText(seg.emoji, r - 110, 6);
+    ctx.restore();
+  });
+
+  // Outer ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+}
+
+function spinWheel() {
+  if (wheelSpinning || wheelSpun) return;
+  wheelSpinning = true;
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('spinBtn').textContent = '🌀 Spinner...';
+  document.getElementById('wheelResult').innerHTML = '';
+
+  const n = WHEEL_SEGMENTS.length;
+  const arc = (Math.PI * 2) / n;
+
+  // Pick random winning segment
+  const winIdx = Math.floor(Math.random() * n);
+  // Total rotation: many full spins + land on winner
+  // Pointer is at top (−π/2). Segment i starts at angle + i*arc − π/2
+  // We want winIdx segment center under pointer:
+  // finalAngle + winIdx*arc + arc/2 = π/2  →  finalAngle = π/2 − winIdx*arc − arc/2
+  const fullSpins = (5 + Math.floor(Math.random() * 4)) * Math.PI * 2;
+  const targetAngle = (Math.PI / 2) - winIdx * arc - arc / 2;
+  const totalRotation = fullSpins + ((targetAngle - wheelAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+  const finalAngle = wheelAngle + totalRotation;
+
+  const duration = 4000 + Math.random() * 1000;
+  const startTime = performance.now();
+  const startAngle = wheelAngle;
+
+  function easeOut(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    wheelAngle = startAngle + totalRotation * easeOut(t);
+    drawWheel(wheelAngle);
+
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      wheelAngle = finalAngle % (Math.PI * 2);
+      wheelSpinning = false;
+      wheelSpun = true;
+      showWheelResult(WHEEL_SEGMENTS[winIdx]);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function showWheelResult(seg) {
+  // Award XP if applicable
+  if (seg.xp > 0) awardXP(seg.xp, 'Lykkehjulet', seg.emoji);
+
+  const result = document.getElementById('wheelResult');
+  result.innerHTML = `
+    <div class="wheel-result-emoji" style="animation:wobble 0.6s ease both">${seg.emoji}</div>
+    <div class="wheel-result-label">${seg.label}</div>
+    <div class="wheel-result-sub">${seg.xp > 0 ? '+' + seg.xp + ' XP er lagt til din konto!' : 'Din belønning er klar! 🎉'}</div>
+  `;
+  spawnParticles();
+  document.getElementById('spinBtn').textContent = '✓ Spundet!';
+  document.getElementById('wheelClose').classList.add('visible');
+}
+
+// ─── POPUP ──────────────────────────────────────────────────────
+function showPopup(emoji, title, sub, xp) {
+  document.getElementById('popupEmoji').textContent = emoji;
+  document.getElementById('popupTitle').textContent = title;
+  document.getElementById('popupSub').textContent = sub;
+  document.getElementById('popupXp').textContent = xp;
+  const el = document.getElementById('xpPopup');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ─── PARTICLES ──────────────────────────────────────────────────
+function spawnParticles() {
+  const emojis = ['⭐','✨','🌟','💫','🎉','🎊'];
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+  for (let i = 0; i < 10; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    const angle = (i/10) * Math.PI * 2;
+    const dist = 80 + Math.random() * 120;
+    p.style.cssText = `
+      left:${cx}px;top:${cy}px;
+      --tx:${Math.cos(angle)*dist}px;
+      --ty:${Math.sin(angle)*dist - 60}px;
+      --rot:${(Math.random()-0.5)*360}deg;
+      --dur:${0.8+Math.random()*0.6}s;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1500);
+  }
+}
+
+// ─── MYSTERY ────────────────────────────────────────────────────
+function triggerMystery() {
+  const reward = mysteryRewards[Math.floor(Math.random()*mysteryRewards.length)];
+  document.getElementById('mysteryBoxReward').textContent = reward;
+  // random icon
+  const icons = ['🎁','🎲','💎','🪄','🌟','🎰'];
+  document.getElementById('mysteryBoxIcon').textContent = icons[Math.floor(Math.random()*icons.length)];
+  document.getElementById('mysteryOverlay').classList.add('show');
+}
+function closeMystery() {
+  document.getElementById('mysteryOverlay').classList.remove('show');
+}
+
+// ─── STREAK ─────────────────────────────────────────────────────
+function openStreak() {
+  buildStreakDays();
+  document.getElementById('streakModal').classList.add('show');
+}
+function closeStreak() {
+  document.getElementById('streakModal').classList.remove('show');
+}
+
+// ─── NAVIGATION ─────────────────────────────────────────────────
+function showPage(page) {
+  document.getElementById('mainPage').classList.toggle('hidden', page !== 'home');
+  document.getElementById('statsPage').classList.toggle('visible', page === 'stats');
+  document.getElementById('adminPage').classList.toggle('visible', page === 'admin');
+  document.getElementById('navHome').classList.toggle('active', page === 'home');
+  document.getElementById('navStats').classList.toggle('active', page === 'stats');
+  document.getElementById('navAdmin').classList.toggle('active', page === 'admin');
+  if (page === 'admin') renderAdminLists();
+}
+
+// ─── PIN ────────────────────────────────────────────────────────
+const ADMIN_PIN = '1234';
+let pinBuffer = '';
+
+function openAdminPin() {
+  pinBuffer = '';
+  updatePinDots();
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('pinOverlay').classList.add('show');
+}
+function closePin() {
+  pinBuffer = '';
+  document.getElementById('pinOverlay').classList.remove('show');
+}
+function pinKey(k) {
+  if (k === 'del') { pinBuffer = pinBuffer.slice(0,-1); }
+  else if (k === 'ok') { checkPin(); return; }
+  else if (pinBuffer.length < 4) { pinBuffer += k; }
+  updatePinDots();
+  if (pinBuffer.length === 4) setTimeout(checkPin, 200);
+}
+function updatePinDots() {
+  for (let i=0;i<4;i++) {
+    document.getElementById('dot'+i).classList.toggle('filled', i < pinBuffer.length);
+  }
+}
+function checkPin() {
+  if (pinBuffer === ADMIN_PIN) {
+    closePin();
+    showPage('admin');
+  } else {
+    document.getElementById('pinError').textContent = '❌ Forkert PIN, prøv igen';
+    pinBuffer = '';
+    updatePinDots();
+    // shake animation
+    const box = document.querySelector('.pin-box');
+    box.style.animation = 'none';
+    setTimeout(() => box.style.animation = '', 10);
+  }
+}
+
+// ─── ADMIN: FORM STATE ──────────────────────────────────────────
+const EMOJIS = ['🍽️','🧹','🧺','🚽','🛒','🌿','📦','🍳','🐕','🪣','🧴','🪟','🌊','🛏️','🧲','📚','🌱','🗑️','🧽','🍵','🧊','🪴','🎒','🛗'];
+let formState = {
+  emoji: '🍽️',
+  type: 'daily',
+  days: [], // empty = all days
+  diff: 1,
+};
+
+function initAdminForm() {
+  const grid = document.getElementById('emojiGrid');
+  grid.innerHTML = '';
+  EMOJIS.forEach(e => {
+    const btn = document.createElement('button');
+    btn.className = 'emoji-opt' + (e === formState.emoji ? ' selected' : '');
+    btn.textContent = e;
+    btn.onclick = () => { formState.emoji = e; document.querySelectorAll('.emoji-opt').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); };
+    grid.appendChild(btn);
+  });
+}
+
+function updateXPDisplay() {
+  document.getElementById('xpVal').textContent = document.getElementById('qXP').value;
+}
+
+function selectType(t) {
+  formState.type = t;
+  document.getElementById('typeDailyBtn').classList.toggle('selected', t==='daily');
+  document.getElementById('typeOptBtn').classList.toggle('selected', t==='optional');
+}
+
+function toggleAllDays() {
+  formState.days = [];
+  document.getElementById('dayAll').classList.add('selected');
+  document.querySelectorAll('.day-btn[data-day]').forEach(b => b.classList.remove('selected'));
+}
+
+function toggleDay(d) {
+  document.getElementById('dayAll').classList.remove('selected');
+  const idx = formState.days.indexOf(d);
+  if (idx > -1) formState.days.splice(idx,1);
+  else formState.days.push(d);
+  document.querySelectorAll('.day-btn[data-day]').forEach(b => {
+    b.classList.toggle('selected', formState.days.includes(parseInt(b.dataset.day)));
+  });
+  if (formState.days.length === 0) toggleAllDays();
+}
+
+function selectDiff(d) {
+  formState.diff = d;
+  [1,2,3].forEach(i => document.getElementById('diff'+i).classList.toggle('selected', i===d));
+}
+
+function switchAdminTab(tab) {
+  ['create','quests','rewards'].forEach(t => {
+    document.getElementById('adminCreate').style.display = tab==='create' ? 'block':'none';
+    document.getElementById('adminQuests').style.display = tab==='quests' ? 'block':'none';
+    document.getElementById('adminRewardsMgr').style.display = tab==='rewards' ? 'block':'none';
+  });
+  document.getElementById('tabCreate').classList.toggle('active', tab==='create');
+  document.getElementById('tabQuests').classList.toggle('active', tab==='quests');
+  document.getElementById('tabRewardsMgr').classList.toggle('active', tab==='rewards');
+  if (tab === 'quests' || tab === 'rewards') renderAdminLists();
+}
+
+// ─── ADMIN: CREATE QUEST ─────────────────────────────────────────
+let questIdCounter = 100;
+
+function createQuest() {
+  const name = document.getElementById('qName').value.trim();
+  if (!name) { document.getElementById('qName').focus(); document.getElementById('qName').style.borderColor='rgba(255,107,107,0.6)'; setTimeout(()=>document.getElementById('qName').style.borderColor='',1500); return; }
+
+  const xp = parseInt(document.getElementById('qXP').value);
+  const desc = document.getElementById('qDesc').value.trim() || '';
+  const days = formState.days.length ? [...formState.days] : [1,2,3,4,5,6,7];
+  const quest = {
+    id: 'q' + (questIdCounter++),
+    icon: formState.emoji,
+    emoji: formState.emoji,
+    name,
+    desc,
+    xp,
+    diff: formState.diff,
+    days,
+    custom: true,
+  };
+
+  if (formState.type === 'daily') dailyQuests.push(quest);
+  else optionalQuests.push(quest);
+
+  // Reset form
+  document.getElementById('qName').value = '';
+  document.getElementById('qDesc').value = '';
+  document.getElementById('qXP').value = 50;
+  updateXPDisplay();
+
+  renderDailyQuests();
+  renderOptionalQuests();
+  showPopup(formState.emoji, 'Quest oprettet!', name, '+' + xp + ' XP');
+  setTimeout(() => switchAdminTab('quests'), 1200);
+}
+
+// ─── ADMIN: RENDER LISTS ─────────────────────────────────────────
+function daysLabel(days) {
+  if (!days || days.length === 7) return 'Alle dage';
+  const names = ['','Man','Tir','Ons','Tor','Fre','Lør','Søn'];
+  return days.map(d => names[d]).join(', ');
+}
+
+function renderAdminLists() {
+  const dl = document.getElementById('adminDailyList');
+  const ol = document.getElementById('adminOptList');
+  const rl = document.getElementById('adminRewardList');
+
+  dl.innerHTML = dailyQuests.length ? '' : '<div class="empty-list">Ingen daglige missioner endnu</div>';
+  dailyQuests.forEach(q => dl.appendChild(makeAdminQuestItem(q, 'daily')));
+
+  ol.innerHTML = optionalQuests.length ? '' : '<div class="empty-list">Ingen ekstra quests endnu</div>';
+  optionalQuests.forEach(q => ol.appendChild(makeAdminQuestItem(q, 'optional')));
+
+  rl.innerHTML = rewards.length ? '' : '<div class="empty-list">Ingen belønninger endnu</div>';
+  rewards.forEach((r, i) => {
+    const item = document.createElement('div');
+    item.className = 'admin-quest-item' + (r.used ? ' opacity-50' : '');
+    item.style.opacity = r.used ? '0.55' : '1';
+    item.innerHTML = `
+      <div class="aqi-icon">${r.used ? '✅' : r.icon}</div>
+      <div class="aqi-body">
+        <div class="aqi-name" style="${r.used ? 'text-decoration:line-through;color:var(--text2)' : ''}">${r.name}</div>
+        <div class="aqi-meta">
+          <span class="aqi-tag">Level ${r.level}</span>
+          ${r.used ? '<span class="aqi-tag" style="background:rgba(107,255,184,0.1);border-color:rgba(107,255,184,0.2);color:var(--accent3)">✓ Brugt</span>' : ''}
+        </div>
+      </div>
+      <div class="aqi-actions">
+        <button class="aqi-used ${r.used ? 'is-used' : ''}" onclick="toggleRewardUsed(${i})" title="${r.used ? 'Marker som ikke brugt' : 'Marker som brugt'}">
+          ${r.used ? '↩️' : '🎁'}
+        </button>
+        <button class="aqi-delete" onclick="deleteReward(${i})">✕</button>
+      </div>
+    `;
+    rl.appendChild(item);
+  });
+}
+
+function makeAdminQuestItem(q, type) {
+  const item = document.createElement('div');
+  item.className = 'admin-quest-item';
+  item.innerHTML = `
+    <div class="aqi-icon">${q.icon}</div>
+    <div class="aqi-body">
+      <div class="aqi-name">${q.name}</div>
+      <div class="aqi-meta">
+        <span class="aqi-tag ${type}">${type === 'daily' ? '⚡ Daglig' : '🗡️ Ekstra'}</span>
+        <span class="aqi-tag">${q.xp} XP</span>
+        <span class="aqi-tag">${daysLabel(q.days)}</span>
+      </div>
+    </div>
+    <div class="aqi-actions">
+      <button class="aqi-edit" onclick="openEdit('${q.id}','${type}')">✏️</button>
+      <button class="aqi-delete" onclick="deleteQuest('${q.id}','${type}')">✕</button>
+    </div>
+  `;
+  return item;
+}
+
+function deleteQuest(id, type) {
+  if (type === 'daily') { const i = dailyQuests.findIndex(q=>q.id===id); if(i>-1) dailyQuests.splice(i,1); }
+  else { const i = optionalQuests.findIndex(q=>q.id===id); if(i>-1) optionalQuests.splice(i,1); }
+  renderDailyQuests();
+  renderOptionalQuests();
+  renderAdminLists();
+}
+
+function deleteReward(i) {
+  rewards.splice(i,1);
+  renderRewards();
+  renderAdminLists();
+}
+
+function toggleRewardUsed(i) {
+  rewards[i].used = !rewards[i].used;
+  renderRewards();
+  renderAdminLists();
+}
+
+// ─── EDIT QUEST ──────────────────────────────────────────────────
+let editState = { id: null, type: null, emoji: '🍽️', days: [], diff: 1 };
+
+function openEdit(id, type) {
+  const arr = type === 'daily' ? dailyQuests : optionalQuests;
+  const q = arr.find(q => q.id === id);
+  if (!q) return;
+
+  editState.id = id;
+  editState.type = type;
+  editState.emoji = q.icon || '🍽️';
+  editState.days = q.days && q.days.length < 7 ? [...q.days] : [];
+  editState.diff = q.diff || 1;
+
+  document.getElementById('editName').value = q.name;
+  document.getElementById('editDesc').value = q.desc || '';
+  document.getElementById('editXP').value = q.xp;
+  document.getElementById('editXpVal').textContent = q.xp;
+  document.getElementById('editSheetIcon').textContent = q.icon;
+
+  // Build emoji grid
+  const grid = document.getElementById('editEmojiGrid');
+  grid.innerHTML = '';
+  EMOJIS.forEach(e => {
+    const btn = document.createElement('button');
+    btn.className = 'emoji-opt' + (e === editState.emoji ? ' selected' : '');
+    btn.textContent = e;
+    btn.onclick = () => {
+      editState.emoji = e;
+      document.getElementById('editSheetIcon').textContent = e;
+      grid.querySelectorAll('.emoji-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    grid.appendChild(btn);
+  });
+
+  // Days
+  updateEditDayBtns();
+
+  // Diff
+  [1,2,3].forEach(d => document.getElementById('editDiff'+d).classList.toggle('selected', d === editState.diff));
+
+  document.getElementById('editOverlay').classList.add('show');
+}
+
+function closeEdit() {
+  document.getElementById('editOverlay').classList.remove('show');
+}
+function closeEditIfBg(e) {
+  if (e.target === document.getElementById('editOverlay')) closeEdit();
+}
+
+function editToggleAllDays() {
+  editState.days = [];
+  updateEditDayBtns();
+}
+function editToggleDay(d) {
+  document.getElementById('editDayAll').classList.remove('selected');
+  const idx = editState.days.indexOf(d);
+  if (idx > -1) editState.days.splice(idx, 1);
+  else editState.days.push(d);
+  if (editState.days.length === 0) editState.days = [];
+  updateEditDayBtns();
+}
+function updateEditDayBtns() {
+  const allDays = editState.days.length === 0;
+  document.getElementById('editDayAll').classList.toggle('selected', allDays);
+  document.querySelectorAll('[data-eday]').forEach(b => {
+    b.classList.toggle('selected', editState.days.includes(parseInt(b.dataset.eday)));
+  });
+}
+function editSelectDiff(d) {
+  editState.diff = d;
+  [1,2,3].forEach(i => document.getElementById('editDiff'+i).classList.toggle('selected', i===d));
+}
+
+function saveEdit() {
+  const name = document.getElementById('editName').value.trim();
+  if (!name) { document.getElementById('editName').focus(); return; }
+
+  const arr = editState.type === 'daily' ? dailyQuests : optionalQuests;
+  const q = arr.find(q => q.id === editState.id);
+  if (!q) return;
+
+  q.name = name;
+  q.desc = document.getElementById('editDesc').value.trim();
+  q.xp = parseInt(document.getElementById('editXP').value);
+  q.icon = editState.emoji;
+  q.emoji = editState.emoji;
+  q.diff = editState.diff;
+  q.days = editState.days.length ? [...editState.days] : [1,2,3,4,5,6,7];
+
+  closeEdit();
+  renderDailyQuests();
+  renderOptionalQuests();
+  renderAdminLists();
+  showPopup(q.icon, 'Quest opdateret!', q.name, q.xp + ' XP');
+}
+
+// ─── ADMIN: ADD REWARD (from admin panel) ────────────────────────
+function addRewardFromAdmin() {
+  const name = document.getElementById('rewardInput2').value.trim();
+  const level = parseInt(document.getElementById('rewardLevelInput2').value) || state.level + 2;
+  const icon = document.getElementById('rewardIcon2').value.trim() || '🎁';
+  if (!name) return;
+  rewards.push({ icon, name, level });
+  rewards.sort((a,b) => a.level - b.level);
+  renderRewards();
+  renderAdminLists();
+  document.getElementById('rewardInput2').value = '';
+  document.getElementById('rewardLevelInput2').value = '';
+  document.getElementById('rewardIcon2').value = '';
+  showPopup('🎁', 'Belønning tilføjet!', name, 'Level ' + level);
+}
+
+// ─── ADMIN: ADD REWARD (old simple version kept for compat) ─────
+function addReward() { addRewardFromAdmin(); }
+
+function scrollOptional() {
+  document.getElementById('optionalScroll').scrollTo({ left: 999, behavior: 'smooth' });
+}
+
+// ─── START ───────────────────────────────────────────────────────
+init();
+initAdminForm();
+</script>
+</body>
+</html>

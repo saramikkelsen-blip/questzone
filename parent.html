@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>QuestZone Forældre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --void:#080611;--surf:rgba(20,16,34,.8);--surf2:rgba(26,22,48,.8);
+  --p:#a050ff;--pk:#ff28b4;--cy:#00e5ff;--g:#00ff9d;--y:#ffe566;
+  --gp:rgba(160,80,255,.45);--gpk:rgba(255,40,180,.45);--gcy:rgba(0,229,255,.4);
+  --t:#ddd0ff;--t2:#6a5f8a;--rim:rgba(160,80,255,.18);
+  --o:'Orbitron',sans-serif;--r:'Rajdhani',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;min-height:100vh;font-family:var(--r);background:var(--void);color:var(--t);overflow-x:hidden;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:9999;}
+
+/* BG */
+.bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.08;}
+.o1{width:400px;height:400px;background:var(--p);top:-120px;left:-120px;animation:drift 12s ease-in-out infinite;}
+.o2{width:300px;height:300px;background:var(--pk);bottom:-100px;right:-80px;animation:drift 9s ease-in-out infinite 2s reverse;}
+@keyframes drift{0%,100%{transform:translate(0,0);}50%{transform:translate(30px,-20px);}}
+
+.app{max-width:430px;margin:0 auto;min-height:100vh;position:relative;z-index:1;padding-bottom:20px;}
+
+/* HEADER */
+.hdr{padding:28px 20px 20px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:var(--o);font-size:14px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,var(--p),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 8px rgba(160,80,255,.5));}
+.logo-sub{font-family:var(--o);font-size:8px;letter-spacing:3px;color:var(--t2);margin-top:2px;}
+.refresh-btn{width:38px;height:38px;border-radius:11px;background:var(--surf);border:1px solid var(--rim);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:all .2s;color:var(--t2);}
+.refresh-btn:hover{border-color:var(--p);color:var(--p);}
+.refresh-btn.spinning{animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* SECTIONS */
+.sec{padding:0 20px;margin-bottom:20px;}
+.sec-ttl{font-family:var(--o);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--t2);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sec-ttl-line{flex:1;height:1px;background:linear-gradient(90deg,var(--rim),transparent);}
+.badge-count{font-family:var(--o);font-size:9px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(255,40,180,.15);border:1px solid rgba(255,40,180,.35);color:var(--pk);}
+
+/* STATUS BAR */
+.status-bar{
+  margin:0 20px 20px;
+  background:var(--surf);border:1px solid var(--rim);border-radius:16px;
+  padding:14px 16px;display:flex;align-items:center;gap:12px;
+}
+.status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.status-dot.ok{background:var(--g);box-shadow:0 0 8px rgba(0,255,157,.5);}
+.status-dot.warn{background:var(--pk);box-shadow:0 0 8px var(--gpk);animation:pulse-dot 1.5s infinite;}
+.status-dot.loading{background:var(--y);box-shadow:0 0 8px rgba(255,229,102,.5);animation:pulse-dot 1s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.3;}}
+.status-txt{font-family:var(--r);font-size:13px;font-weight:600;color:var(--t);}
+.status-sub{font-family:var(--r);font-size:11px;color:var(--t2);margin-top:1px;}
+.last-update{font-family:var(--o);font-size:8px;letter-spacing:1px;color:var(--t2);margin-left:auto;white-space:nowrap;}
+
+/* PENDING CARD */
+.pend-card{
+  background:linear-gradient(135deg,rgba(255,229,102,.09),rgba(255,40,180,.05));
+  border:1px solid rgba(255,229,102,.42);border-radius:18px;
+  padding:16px;margin-bottom:10px;
+  position:relative;overflow:hidden;
+}
+.pend-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--y),transparent);opacity:.6;}
+.pend-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.pend-ico{width:46px;height:46px;min-width:46px;border-radius:13px;background:rgba(255,255,255,.05);border:1px solid var(--rim);display:flex;align-items:center;justify-content:center;font-size:24px;}
+.pend-name{font-family:var(--r);font-size:16px;font-weight:700;color:var(--t);}
+.pend-sub{font-family:var(--r);font-size:12px;color:var(--t2);margin-top:2px;}
+.pend-tag{display:inline-block;font-family:var(--o);font-size:8px;font-weight:700;letter-spacing:1px;padding:2px 8px;border-radius:99px;background:rgba(255,229,102,.1);border:1px solid rgba(255,229,102,.3);color:var(--y);margin-top:4px;}
+.pend-acts{display:flex;gap:10px;}
+.btn-approve{
+  flex:1;padding:13px;border-radius:13px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,rgba(0,255,157,.15),rgba(0,229,255,.1));
+  border:1px solid rgba(0,255,157,.4);
+  font-family:var(--o);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--g);
+  transition:all .2s;
+}
+.btn-approve:hover{background:linear-gradient(135deg,rgba(0,255,157,.25),rgba(0,229,255,.15));box-shadow:0 0 16px rgba(0,255,157,.2);}
+.btn-approve:active{transform:scale(.96);}
+.btn-reject{
+  flex:1;padding:13px;border-radius:13px;border:none;cursor:pointer;
+  background:rgba(255,40,180,.08);border:1px solid rgba(255,40,180,.3);
+  font-family:var(--o);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--pk);
+  transition:all .2s;
+}
+.btn-reject:hover{background:rgba(255,40,180,.16);box-shadow:0 0 16px rgba(255,40,180,.15);}
+.btn-reject:active{transform:scale(.96);}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:32px 20px;}
+.empty-ico{font-size:48px;margin-bottom:12px;display:block;}
+.empty-ttl{font-family:var(--o);font-size:14px;font-weight:700;letter-spacing:2px;color:var(--g);margin-bottom:6px;text-shadow:0 0 10px rgba(0,255,157,.4);}
+.empty-sub{font-family:var(--r);font-size:13px;color:var(--t2);}
+
+/* RAPPORT CARDS */
+.rap-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
+.rap-stat{background:var(--surf);border:1px solid var(--rim);border-radius:14px;padding:14px 10px;text-align:center;}
+.rap-v{font-family:var(--o);font-size:22px;font-weight:700;background:linear-gradient(135deg,var(--p),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.rap-l{font-family:var(--o);font-size:8px;letter-spacing:1px;color:var(--t2);margin-top:3px;text-transform:uppercase;}
+
+/* DAY ROWS */
+.day-row{background:var(--surf);border:1px solid var(--rim);border-radius:13px;padding:11px 14px;margin-bottom:8px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;}
+.day-row.today{border-color:rgba(160,80,255,.35);}
+.day-name{font-family:var(--o);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--t);min-width:28px;}
+.day-icons{display:flex;gap:6px;align-items:center;}
+.day-ico{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;background:rgba(255,255,255,.04);border:1px solid var(--rim);}
+.day-ico.ok{background:rgba(0,255,157,.1);border-color:rgba(0,255,157,.3);}
+.day-ico.miss{opacity:.4;}
+.day-xp{font-family:var(--o);font-size:10px;font-weight:700;color:var(--p);white-space:nowrap;}
+
+/* TOAST */
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surf2);border:1px solid var(--rim);border-radius:14px;padding:12px 20px;font-family:var(--o);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t);z-index:2000;transition:transform .35s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.ok{border-color:rgba(0,255,157,.4);color:var(--g);}
+.toast.err{border-color:rgba(255,40,180,.4);color:var(--pk);}
+
+/* TABS */
+.tabs{display:flex;gap:8px;padding:0 20px 16px;}
+.tab{flex:1;padding:10px 0;background:var(--surf);border:1px solid var(--rim);border-radius:12px;font-family:var(--o);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--t2);cursor:pointer;transition:all .2s;text-align:center;position:relative;}
+.tab.act{background:rgba(160,80,255,.12);border-color:rgba(160,80,255,.4);color:var(--p);box-shadow:0 0 12px rgba(160,80,255,.1);}
+.tab-badge{position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:var(--pk);font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 0 6px var(--gpk);}
+
+.tab-content{display:none;}
+.tab-content.vis{display:block;}
+</style>
+</head>
+<body>
+
+<div class="bg"><div class="orb o1"></div><div class="orb o2"></div></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<div class="app">
+  <div class="hdr">
+    <div>
+      <div class="logo">⚡ QUESTZONE</div>
+      <div class="logo-sub">FORÆLDREOVERBLIK</div>
+    </div>
+    <button class="refresh-btn" id="refreshBtn" onclick="loadData()" title="Opdater">🔄</button>
+  </div>
+
+  <!-- STATUS -->
+  <div class="status-bar" id="statusBar">
+    <div class="status-dot loading" id="statusDot"></div>
+    <div>
+      <div class="status-txt" id="statusTxt">Forbinder...</div>
+      <div class="status-sub" id="statusSub">Henter data fra Supabase</div>
+    </div>
+    <div class="last-update" id="lastUpdate"></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab act" id="tabPend" onclick="switchTab('pend')">
+      GODKEND
+      <span class="tab-badge" id="pendBadge" style="display:none">0</span>
+    </button>
+    <button class="tab" id="tabRap" onclick="switchTab('rap')">RAPPORT</button>
+  </div>
+
+  <!-- GODKEND TAB -->
+  <div class="tab-content vis" id="tcPend">
+    <div class="sec">
+      <div id="pendingContainer">
+        <div class="empty-state">
+          <span class="empty-ico">⏳</span>
+          <div style="font-family:var(--o);font-size:12px;color:var(--t2);letter-spacing:2px;">INDLÆSER...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RAPPORT TAB -->
+  <div class="tab-content" id="tcRap">
+    <div class="sec">
+      <div class="sec-ttl">📊 Denne Uge <div class="sec-ttl-line"></div></div>
+      <div class="rap-grid" id="rapGrid"></div>
+      <div class="sec-ttl" style="margin-top:8px">DAGSOVERSIGT <div class="sec-ttl-line"></div></div>
+      <div id="rapDays"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SB_URL = 'https://uikfmgroworuaofiimnc.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpa2ZtZ3Jvd29ydWFvZmlpbW5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MzYzNzQsImV4cCI6MjA5MDExMjM3NH0.YCTOwhDgFPvuSAER29D0mP2L1OAO6AuT4PYryN0DUIo';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+// Quest definitioner — samme som barnets app
+const DQ=[
+  {id:"d1",ico:"🛏️",name:"Red din seng",desc:"Gør den klar til aftenen"},
+  {id:"d2",ico:"🍽️",name:"Dæk bordet",desc:"Klar til aftensmad"},
+  {id:"d3",ico:"🧹",name:"Ryd af bord",desc:"Sæt tallerkener og glas væk"},
+];
+const MQ_COUNT=9, EQ_COUNT=7;
+
+let D = null; // raw Supabase data
+let currentTab = 'pend';
+let pollInterval = null;
+
+// ── UI helpers ────────────────────────────
+function switchTab(t){
+  currentTab=t;
+  ['Pend','Rap'].forEach(n=>{
+    document.getElementById('tab'+n).classList.toggle('act',t===n.toLowerCase());
+    document.getElementById('tc'+n).classList.toggle('vis',t===n.toLowerCase());
+  });
+  if(t==='rap' && D) renderRapport();
+}
+
+function showToast(msg, type='ok'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast '+type+' show';
+  setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+function setStatus(state, txt, sub){
+  const dot=document.getElementById('statusDot');
+  const states={ok:'ok',warn:'warn',loading:'loading'};
+  dot.className='status-dot '+(states[state]||'ok');
+  document.getElementById('statusTxt').textContent=txt;
+  document.getElementById('statusSub').textContent=sub;
+}
+
+function setLastUpdate(){
+  const now=new Date();
+  document.getElementById('lastUpdate').textContent=
+    `Opdateret ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+}
+
+// ── LOAD DATA ────────────────────────────
+async function loadData(){
+  const btn=document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  setStatus('loading','Opdaterer...','Henter seneste data');
+  try{
+    const {data,error}=await sb
+      .from('questzone_state').select('*').eq('id','main').single();
+    if(error) throw error;
+    D=data;
+    renderPending();
+    if(currentTab==='rap') renderRapport();
+    const pendCount=(D.daily_pending||[]).length;
+    setStatus(
+      pendCount>0?'warn':'ok',
+      pendCount>0?`${pendCount} quest${pendCount>1?'s':''} afventer godkendelse`:'Alt er opdateret',
+      pendCount>0?'Tryk GODKEND for at se':'Ingen ventende godkendelser'
+    );
+    setLastUpdate();
+    updatePendBadge(pendCount);
+  }catch(e){
+    setStatus('warn','Kunne ikke opdatere','Tjek din internetforbindelse');
+    showToast('❌ Fejl: '+e.message,'err');
+  }finally{
+    btn.classList.remove('spinning');
+  }
+}
+
+// ── PENDING ────────────────────────────
+function renderPending(){
+  const pending=(D?.daily_pending||[]);
+  const container=document.getElementById('pendingContainer');
+  updatePendBadge(pending.length);
+  if(!pending.length){
+    container.innerHTML=`
+      <div class="empty-state">
+        <span class="empty-ico">✅</span>
+        <div class="empty-ttl">INTET AT GODKENDE</div>
+        <div class="empty-sub">Ingen daglige missioner venter på godkendelse</div>
+      </div>`;
+    return;
+  }
+  container.innerHTML='';
+  pending.forEach(id=>{
+    const q=DQ.find(q=>q.id===id);
+    if(!q) return;
+    const card=document.createElement('div');
+    card.className='pend-card';
+    card.innerHTML=`
+      <div class="pend-top">
+        <div class="pend-ico">${q.ico}</div>
+        <div>
+          <div class="pend-name">${q.name}</div>
+          <div class="pend-sub">${q.desc}</div>
+          <div class="pend-tag">⏳ AFVENTER GODKENDELSE</div>
+        </div>
+      </div>
+      <div class="pend-acts">
+        <button class="btn-approve" onclick="approve('${id}')">✓ GODKEND</button>
+        <button class="btn-reject" onclick="reject('${id}')">✕ AFVIS</button>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function updatePendBadge(count){
+  const badge=document.getElementById('pendBadge');
+  badge.style.display=count>0?'flex':'none';
+  badge.textContent=count;
+}
+
+async function approve(id){
+  try{
+    const pending=(D.daily_pending||[]).filter(x=>x!==id);
+    const done=[...(D.daily_done||[])];
+    if(!done.includes(id)) done.push(id);
+    const total=(D.total||0)+1;
+    const {error}=await sb.from('questzone_state').upsert({
+      id:'main',
+      daily_pending:pending,
+      daily_done:done,
+      total,
+      updated_at:new Date().toISOString()
+    });
+    if(error) throw error;
+    D.daily_pending=pending;
+    D.daily_done=done;
+    D.total=total;
+    renderPending();
+    showToast('✓ Godkendt!','ok');
+    const q=DQ.find(q=>q.id===id);
+    if(q) setStatus('ok',`"${q.name}" godkendt`,'Barnet kan se det nu');
+  }catch(e){ showToast('❌ Fejl — prøv igen','err'); }
+}
+
+async function reject(id){
+  try{
+    const pending=(D.daily_pending||[]).filter(x=>x!==id);
+    const {error}=await sb.from('questzone_state').upsert({
+      id:'main',
+      daily_pending:pending,
+      updated_at:new Date().toISOString()
+    });
+    if(error) throw error;
+    D.daily_pending=pending;
+    renderPending();
+    showToast('✕ Afvist — barnet prøver igen','err');
+  }catch(e){ showToast('❌ Fejl — prøv igen','err'); }
+}
+
+// ── RAPPORT ────────────────────────────
+function getWeekNumber(){
+  const d=new Date(); d.setHours(0,0,0,0);
+  d.setDate(d.getDate()+4-(d.getDay()||7));
+  const y=new Date(d.getFullYear(),0,1);
+  return Math.ceil((((d-y)/86400000)+1)/7);
+}
+function getWeekDays(){
+  const now=new Date(),day=now.getDay();
+  const mon=new Date(now);
+  mon.setDate(now.getDate()-(day===0?6:day-1));mon.setHours(0,0,0,0);
+  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
+}
+
+function renderRapport(){
+  if(!D) return;
+  const days=getWeekDays();
+  const today=new Date().toDateString();
+  const log=D.weekly_log||{};
+  const dayNames=['Man','Tir','Ons','Tor','Fre','Lør','Søn'];
+
+  let totalXp=0,morningOk=0,eveningOk=0,dailyOk=0,optCount=0;
+  days.forEach(d=>{
+    const e=log[d.toDateString()];if(!e)return;
+    totalXp+=e.xpToday||0;
+    if(e.morningDone) morningOk++;
+    if(e.eveningDone) eveningOk++;
+    if((e.dailyDone||0)>=(e.dailyTotal||3)) dailyOk++;
+    optCount+=e.optDone||0;
+  });
+
+  document.getElementById('rapGrid').innerHTML=`
+    <div class="rap-stat"><div class="rap-v">${totalXp}</div><div class="rap-l">XP optjent</div></div>
+    <div class="rap-stat"><div class="rap-v">${morningOk}/7</div><div class="rap-l">Morgenrutiner</div></div>
+    <div class="rap-stat"><div class="rap-v">${eveningOk}/7</div><div class="rap-l">Aftenrutiner</div></div>
+    <div class="rap-stat"><div class="rap-v">${dailyOk}/7</div><div class="rap-l">Dagsmissioner</div></div>
+    <div class="rap-stat"><div class="rap-v">${optCount}</div><div class="rap-l">Ekstra quests</div></div>
+    <div class="rap-stat"><div class="rap-v">${D.streak||0}</div><div class="rap-l">🔥 Streak</div></div>
+  `;
+
+  const daysEl=document.getElementById('rapDays');daysEl.innerHTML='';
+  days.forEach((d,i)=>{
+    const key=d.toDateString(),e=log[key];
+    const isToday=key===today,isFuture=d>new Date()&&!isToday;
+    const row=document.createElement('div');
+    row.className='day-row'+(isToday?' today':'');
+    if(isFuture){
+      row.innerHTML=`<div class="day-name">${dayNames[i]}</div><div style="font-family:var(--r);font-size:11px;color:var(--t2)">Kommer...</div><div></div>`;
+    } else if(!e){
+      row.innerHTML=`<div class="day-name">${dayNames[i]}</div><div class="day-icons"><div class="day-ico miss">🌅</div><div class="day-ico miss">🌙</div><div class="day-ico miss">⚡</div></div><div class="day-xp" style="color:var(--t2)">0 XP</div>`;
+    } else {
+      row.innerHTML=`
+        <div class="day-name">${dayNames[i]}${isToday?' <span style="color:var(--p);font-size:7px"> I DAG</span>':''}</div>
+        <div class="day-icons">
+          <div class="day-ico ${e.morningDone?'ok':'miss'}">${e.morningDone?'✅':'🌅'}</div>
+          <div class="day-ico ${e.eveningDone?'ok':'miss'}">${e.eveningDone?'✅':'🌙'}</div>
+          <div class="day-ico ${(e.dailyDone||0)>=(e.dailyTotal||3)?'ok':'miss'}">${(e.dailyDone||0)>=(e.dailyTotal||3)?'✅':'⚡'}</div>
+          ${(e.optDone||0)>0?`<div class="day-ico ok" style="font-size:9px;">🗡${e.optDone}</div>`:''}
+        </div>
+        <div class="day-xp">+${e.xpToday||0} XP</div>`;
+    }
+    daysEl.appendChild(row);
+  });
+}
+
+// ── AUTO-POLL hvert 30 sek ──────────────
+function startPolling(){
+  loadData();
+  pollInterval=setInterval(loadData,30000);
+}
+
+// Pause polling når siden ikke er synlig (sparer batteri)
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+    clearInterval(pollInterval);
+  } else {
+    startPolling();
+  }
+});
+
+startPolling();
+</script>
+</body>
+</html>
