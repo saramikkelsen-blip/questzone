@@ -3654,18 +3654,14 @@ async function pollState(){
 }
 
 function startPolling(){
-  // Poll hvert 30 sekund
-  pollTimer = setInterval(pollState, 30000);
+  // Poll hvert 10 sekund — altid aktiv
+  setInterval(pollState, 10000);
 
-  // Pause når siden ikke er synlig (sparer batteri)
+  // Kør også straks når siden får fokus igen
   document.addEventListener('visibilitychange', ()=>{
-    if(document.hidden){
-      clearInterval(pollTimer);
-    } else {
-      pollState(); // tjek med det samme når siden bliver synlig igen
-      pollTimer = setInterval(pollState, 30000);
-    }
+    if(!document.hidden) pollState();
   });
+  window.addEventListener('focus', pollState);
 }
 
 function init(){
