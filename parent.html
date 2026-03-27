@@ -255,8 +255,10 @@ async function loadData(){
     setLastUpdate();
     updatePendBadge(pendCount);
   }catch(e){
-    setStatus('warn','Kunne ikke opdatere','Tjek din internetforbindelse');
-    showToast('❌ Fejl: '+e.message,'err');
+    const msg = e?.message || e?.toString() || 'Ukendt fejl';
+    setStatus('warn','Kunne ikke opdatere', msg);
+    showToast('❌ '+msg,'err');
+    console.error('Supabase fejl:', e);
   }finally{
     btn.classList.remove('spinning');
   }
