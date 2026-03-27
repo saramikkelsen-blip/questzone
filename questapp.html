@@ -3589,6 +3589,83 @@ async function boot(){
   init();
   setLoad(100, 'KLAR!');
   setTimeout(hideLoad, 500);
+  startPolling();
+}
+
+// ─── Auto-polling — tjekker Supabase hvert 30 sek ──
+let pollTimer = null;
+
+async function pollState(){
+  // Hent kun de felter der kan ændres af forældre
+  try {
+    const {data, error} = await sb
+      .from('questzone_state')
+      .select('daily_done, daily_pending, daily_excused, updated_at')
+      .eq('id', USER_ID)
+      .single();
+    if(error || !data) return;
+
+    // Tjek om der er sket ændringer siden sidst
+    const newDone    = JSON.stringify(data.daily_done    || []);
+    const newPending = JSON.stringify(data.daily_pending || []);
+    const newExcused = JSON.stringify(data.daily_excused || []);
+    const oldDone    = JSON.stringify(S.dailyDone    || []);
+    const oldPending = JSON.stringify(S.dailyPending || []);
+    const oldExcused = JSON.stringify(S.dailyExcused || []);
+
+    if(newDone !== oldDone || newPending !== oldPending || newExcused !== oldExcused){
+      S.dailyDone    = data.daily_done    || [];
+      S.dailyPending = data.daily_pending || [];
+      S.dailyExcused = data.daily_excused || [];
+      rDaily(); // opdater visningen
+
+      // Vis besked hvis en quest blev godkendt
+      const nyGodkendt = (data.daily_done||[]).filter(id => !(JSON.parse(oldDone)||[]).includes(id));
+      nyGodkendt.forEach(id => {
+        const q = DQ.find(q => q.id === id);
+        if(q) popup('✅', 'GODKENDT!', q.name, 'Forælder har godkendt din opgave');
+      });
+
+      // Vis besked hvis en quest blev afvist (var pending, er ikke længere pending eller done)
+      const oldPendingArr = JSON.parse(oldPending) || [];
+      const nyAfvist = oldPendingArr.filter(id =>
+        !(data.daily_pending||[]).includes(id) &&
+        !(data.daily_done||[]).includes(id)
+      );
+      nyAfvist.forEach(id => {
+        const q = DQ.find(q => q.id === id);
+        if(q) popup('❌', 'IKKE GODKENDT', q.name, 'Prøv igen!');
+      });
+
+      // Tjek om alle nu er complete efter godkendelse
+      if(allDailyComplete() && !S.wheelSpun){
+        setTimeout(()=>{
+          xpUp(30,'Dagens missioner fuldført!','⚡');
+          const b=document.getElementById('spinBanner');
+          b.style.display='flex';
+        },600);
+        checkAchievements();
+      }
+    }
+  } catch(e){
+    // Stil polling — intet der skal crashe appen
+    console.warn('Poll fejl:', e.message);
+  }
+}
+
+function startPolling(){
+  // Poll hvert 30 sekund
+  pollTimer = setInterval(pollState, 30000);
+
+  // Pause når siden ikke er synlig (sparer batteri)
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.hidden){
+      clearInterval(pollTimer);
+    } else {
+      pollState(); // tjek med det samme når siden bliver synlig igen
+      pollTimer = setInterval(pollState, 30000);
+    }
+  });
 }
 
 function init(){
