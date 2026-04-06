@@ -2315,7 +2315,7 @@ function checkWarnings(){
 
   // Aftenadvarsel kl. 19:45
   const eWarnTime   = 19*60+45;
-  const eExpireTime = wknd ? 22*60+0 : 20*60+0; // deadline = udløb
+  const eExpireTime = wknd ? 22*60+0 : 20*60+45; // deadline = udløb
   const eDone       = S.eveningDone.length >= EQ.length;
   const eStarted    = S.eveningStarted;
 
@@ -2678,7 +2678,7 @@ function routineStatus(type){
     },
     evening: {
       open:  19*60+0,
-      close: wknd ? 22*60+0 : 20*60+0,
+      close: wknd ? 22*60+0 : 20*60+45,
       done:  ()=>S.eveningDone.length>=EQ.length
     },
   }[type];
@@ -2693,7 +2693,7 @@ function routineStatus(type){
 function getLockWindow(){
   // Låst: fra 20:15 (hverdag) / 22:15 (weekend) til morgenrutinen åbner
   const wknd = isWeekend();
-  const lockFrom  = wknd ? 22*60+15 : 20*60+15;
+  const lockFrom  = wknd ? 22*60+15 : 21*60+0;
   const lockUntil = 6*60+30;
   return {lockFrom, lockUntil};
 }
