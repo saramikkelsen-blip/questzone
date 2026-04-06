@@ -1530,6 +1530,13 @@ body::after{
       <button class="at" id="tRap" onclick="aTab('rap')">RAPPORT</button>
     </div>
 
+    <!-- OVERBLIK -->
+    <div style="padding:0 20px 14px;display:flex;flex-direction:column;gap:8px;">
+      <div style="font-family:var(--o);font-size:8px;letter-spacing:3px;color:var(--t2);padding-bottom:2px;">📊 OVERBLIK</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;" id="adminStats"></div>
+    </div>
+    <div style="height:1px;background:linear-gradient(90deg,transparent,var(--rim),transparent);margin:0 20px 8px;"></div>
+
     <!-- TEST SEKTION -->
     <div style="padding:0 20px 16px;display:flex;flex-direction:column;gap:10px;">
       <div style="font-family:var(--o);font-size:8px;letter-spacing:3px;color:var(--t2);padding-bottom:2px;">🧪 TEST</div>
@@ -1541,8 +1548,22 @@ body::after{
         <button onclick="testLockScreen()" style="flex:1;padding:12px 8px;background:rgba(255,40,180,.08);border:1px solid rgba(255,40,180,.3);border-radius:12px;font-family:var(--o);font-size:9px;font-weight:700;letter-spacing:1px;color:var(--pk);cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(255,40,180,.16)'" onmouseout="this.style.background='rgba(255,40,180,.08)'">😴 TEST LÅS</button>
         <button onclick="testWarning()" style="flex:1;padding:12px 8px;background:rgba(255,229,102,.08);border:1px solid rgba(255,229,102,.3);border-radius:12px;font-family:var(--o);font-size:9px;font-weight:700;letter-spacing:1px;color:var(--y);cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(255,229,102,.16)'" onmouseout="this.style.background='rgba(255,229,102,.08)'">⚠️ TEST ADVARSEL</button>
       </div>
+      <button onclick="confirmReset()" style="width:100%;padding:13px;background:rgba(255,40,180,.06);border:1px solid rgba(255,40,180,.35);border-radius:12px;font-family:var(--o);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--pk);cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(255,40,180,.14)'" onmouseout="this.style.background='rgba(255,40,180,.06)'">🔄 NULSTIL ALLE DATA</button>
     </div>
     <div style="height:1px;background:linear-gradient(90deg,transparent,var(--rim),transparent);margin:0 20px 8px;"></div>
+
+    <!-- NULSTIL BEKRÆFTELSE -->
+    <div id="resetConfirm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(16px);z-index:6000;align-items:center;justify-content:center;">
+      <div style="background:rgba(15,12,26,.99);border:1px solid rgba(255,40,180,.4);border-radius:24px;padding:32px 26px;text-align:center;max-width:300px;width:90%;box-shadow:0 0 60px rgba(255,40,180,.15);">
+        <div style="font-size:44px;margin-bottom:12px">⚠️</div>
+        <div style="font-family:var(--o);font-size:16px;font-weight:700;color:var(--pk);letter-spacing:2px;margin-bottom:8px;">NULSTIL ALT?</div>
+        <div style="font-family:var(--r);font-size:13px;color:var(--t2);margin-bottom:24px;">XP, level, streak og alle fremskridt slettes permanent. Kan ikke fortrydes.</div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="document.getElementById('resetConfirm').style.display='none'" style="flex:1;padding:12px;background:rgba(255,255,255,.05);border:1px solid var(--rim);border-radius:12px;font-family:var(--o);font-size:10px;font-weight:700;color:var(--t2);cursor:pointer;">ANNULLER</button>
+          <button onclick="doReset()" style="flex:1;padding:12px;background:linear-gradient(135deg,rgba(255,40,180,.3),rgba(160,80,255,.2));border:1px solid rgba(255,40,180,.5);border-radius:12px;font-family:var(--o);font-size:10px;font-weight:700;color:var(--pk);cursor:pointer;">JA, NULSTIL</button>
+        </div>
+      </div>
+    </div>
 
     <!-- CREATE -->
     <div id="aCr">
@@ -1675,7 +1696,7 @@ body::after{
 // ═══════════════════════════════════════════════
 //  DATA
 // ═══════════════════════════════════════════════
-let S={xp:0,level:1,streak:0,total:0,dailyDone:[],dailyExcused:[],dailyPending:[],morningDone:[],eveningDone:[],optDone:[],optDoneTotal:0,lucky:false,wheelSpun:false,morningBonus:false,eveningBonus:false,morningStarted:false,eveningStarted:false,morningCount:0,eveningCount:0,achievements:{},weeklyProgress:{},weeklyDays:{},weeklyLog:{},lastRoutineDay:''};
+let S={xp:0,level:1,streak:0,total:0,dailyDone:[],dailyExcused:[],dailyPending:[],morningDone:[],eveningDone:[],optDone:[],optDoneTotal:0,lucky:false,wheelSpun:false,morningBonus:false,eveningBonus:false,morningStarted:false,eveningStarted:false,morningCount:0,eveningCount:0,achievements:{},weeklyProgress:{},weeklyDays:{},weeklyLog:{},lastRoutineDay:'',weeklyOptId:null,weeklyOptWeek:null};
 
 const LEVELS=[
   {l:1, n:"ROOKIE",          r:0},
@@ -1868,6 +1889,60 @@ function closeBadedag(){
   document.getElementById('badedagOv').classList.remove('show');
 }
 
+function confirmReset(){
+  document.getElementById('resetConfirm').style.display='flex';
+}
+
+async function doReset(){
+  document.getElementById('resetConfirm').style.display='none';
+  // Nulstil state lokalt
+  S.xp=0;S.level=1;S.streak=0;S.total=0;
+  S.dailyDone=[];S.dailyExcused=[];S.dailyPending=[];
+  S.morningDone=[];S.eveningDone=[];S.optDone=[];S.optDoneTotal=0;
+  S.lucky=false;S.wheelSpun=false;
+  S.morningBonus=false;S.eveningBonus=false;
+  S.morningStarted=false;S.eveningStarted=false;
+  S.morningCount=0;S.eveningCount=0;
+  S.achievements={};S.weeklyProgress={};S.weeklyDays={};S.weeklyLog={};
+  S.lastRoutineDay='';S.lastReset=new Date().toDateString();S.lastStreak=null;
+  // Gem til Supabase
+  await saveState();
+  // Opdater UI
+  rDaily();rMorning();rEvening();rOpt();rRew();hud();buildStrk();rAdm();
+  document.getElementById('spinBanner').style.display='none';
+  popup('🔄','NULSTILLET!','Alle data er slettet','Start forfra!');
+}
+
+function renderAdminStats(){
+  const el=document.getElementById('adminStats');
+  if(!el) return;
+  const unlocked=Object.keys(S.achievements||{}).length;
+  el.innerHTML=`
+    <div style="background:var(--surf);border:1px solid var(--rim);border-radius:12px;padding:12px 8px;text-align:center;">
+      <div style="font-family:var(--o);font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--p),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${S.xp}</div>
+      <div style="font-family:var(--o);font-size:8px;color:var(--t2);margin-top:2px;letter-spacing:1px;">XP</div>
+    </div>
+    <div style="background:var(--surf);border:1px solid var(--rim);border-radius:12px;padding:12px 8px;text-align:center;">
+      <div style="font-family:var(--o);font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--p),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${S.streak}🔥</div>
+      <div style="font-family:var(--o);font-size:8px;color:var(--t2);margin-top:2px;letter-spacing:1px;">STREAK</div>
+    </div>
+    <div style="background:var(--surf);border:1px solid var(--rim);border-radius:12px;padding:12px 8px;text-align:center;">
+      <div style="font-family:var(--o);font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--p),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">LVL ${S.level}</div>
+      <div style="font-family:var(--o);font-size:8px;color:var(--t2);margin-top:2px;letter-spacing:1px;">LEVEL</div>
+    </div>
+    <div style="background:var(--surf);border:1px solid var(--rim);border-radius:12px;padding:12px 8px;text-align:center;">
+      <div style="font-family:var(--o);font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--p),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${S.morningCount}</div>
+      <div style="font-family:var(--o);font-size:8px;color:var(--t2);margin-top:2px;letter-spacing:1px;">MORGEN</div>
+    </div>
+    <div style="background:var(--surf);border:1px solid var(--rim);border-radius:12px;padding:12px 8px;text-align:center;">
+      <div style="font-family:var(--o);font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--p),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${S.eveningCount}</div>
+      <div style="font-family:var(--o);font-size:8px;color:var(--t2);margin-top:2px;letter-spacing:1px;">AFTEN</div>
+    </div>
+    <div style="background:var(--surf);border:1px solid var(--rim);border-radius:12px;padding:12px 8px;text-align:center;">
+      <div style="font-family:var(--o);font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--p),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${unlocked}</div>
+      <div style="font-family:var(--o);font-size:8px;color:var(--t2);margin-top:2px;letter-spacing:1px;">BADGES</div>
+    </div>`;
+}
 function testLockScreen(){
   // Nulstil adminUnlocked så lockscreenen vises
   adminUnlocked = false;
@@ -2288,18 +2363,33 @@ function startWarningTimer(){
 // ═══════════════════════════════════════════════
 //  RENDER
 // ═══════════════════════════════════════════════
+function getWeeklyOptQuest(){
+  // Returnerer den valgte ugens ekstra quest hvis den stadig er aktiv denne uge
+  if(!S.weeklyOptId || !S.weeklyOptWeek) return null;
+  const currentWeek = `${new Date().getFullYear()}-w${getWeekNumber()}`;
+  if(S.weeklyOptWeek !== currentWeek) return null;
+  return OQ.find(q => q.id === S.weeklyOptId) || null;
+}
+
 function allDailyComplete(){
   // Tæller som klaret: done ELLER excused — pending tæller IKKE
-  return DQ.every(q =>
+  const allFixed = DQ.every(q =>
     S.dailyDone.includes(q.id) || (S.dailyExcused||[]).includes(q.id)
   );
+  const wq = getWeeklyOptQuest();
+  const wqOk = !wq || S.dailyDone.includes(wq.id) || (S.dailyExcused||[]).includes(wq.id);
+  return allFixed && wqOk;
 }
 
 function rDaily(){
   const g=document.getElementById('dailyList');g.innerHTML='';
   const excused = S.dailyExcused||[];
   const pending = S.dailyPending||[];
-  const active  = DQ.filter(q=>!excused.includes(q.id));
+  const wq      = getWeeklyOptQuest();
+
+  // Byg liste: faste daglige + evt. ugens ekstra quest
+  const allQ = [...DQ, ...(wq ? [wq] : [])];
+  const active  = allQ.filter(q=>!excused.includes(q.id));
   const dn      = S.dailyDone.filter(id=>active.some(q=>q.id===id)).length;
   const tot     = active.length;
   const pct     = tot>0 ? Math.round(dn/tot*100) : 100;
@@ -2307,16 +2397,17 @@ function rDaily(){
   document.getElementById('dpFill').style.width = pct+'%';
   document.getElementById('dpLbl').textContent = `${dn} / ${tot}`;
 
-  DQ.forEach(q=>{
+  allQ.forEach(q=>{
     const done    = S.dailyDone.includes(q.id);
     const excuse  = excused.includes(q.id);
     const pend    = pending.includes(q.id);
+    const isWq    = wq && q.id === wq.id;
     const c=document.createElement('div');
     c.className='qcard'+(done||excuse?' done':pend?' pending':'');
     c.innerHTML=`
       <div class="q-icon">${q.ico}</div>
       <div class="q-body">
-        <div class="q-name">${done?'✅ ':excuse?'⏭ ':pend?'⏳ ':''}${q.name}</div>
+        <div class="q-name">${done?'✅ ':excuse?'⏭ ':pend?'⏳ ':''}${q.name}${isWq?' <span style="font-family:var(--o);font-size:8px;color:var(--y);background:rgba(255,229,102,.1);border:1px solid rgba(255,229,102,.3);border-radius:99px;padding:1px 6px;letter-spacing:1px;">UGE</span>':''}</div>
         <div class="q-desc">${excuse?'<span style="color:var(--y);font-size:11px">Ikke nødvendig i dag</span>':pend?'<span style="color:var(--y);font-size:11px">Venter på forældrens godkendelse...</span>':q.desc}</div>
         <div class="q-diff">${[1,2,3].map(i=>`<div class="dd${i<=q.diff?' on':''}"></div>`).join('')}</div>
       </div>
@@ -2486,7 +2577,8 @@ function seededShuffle(arr){
 
 function rOpt(){
   const sc=document.getElementById('optSc');sc.innerHTML='';
-  seededShuffle(OQ).forEach(q=>{
+  const wq=getWeeklyOptQuest();
+  seededShuffle(OQ).filter(q=>!wq||q.id!==wq.id).forEach(q=>{
     const d=S.optDone.includes(q.id);
     const c=document.createElement('div');c.className='ocard'+(d?' done':'');
     c.innerHTML=`<div class="o-icon">${q.ico}</div><div class="o-name">${q.name}</div><div class="o-xp">${d?'✓':'+'+q.xp+' XP'}</div>`;
@@ -2497,8 +2589,10 @@ function rOpt(){
 
 function rRew(){
   const sc=document.getElementById('rewSc');sc.innerHTML='';
+  // Find kun den første belønning der ikke er låst op endnu
+  const nextRew = RW.find(r => S.level < r.level && !r.used);
   RW.forEach(r=>{
-    const u=S.level>=r.level,n=!u&&r.level===S.level+1,used=!!r.used;
+    const u=S.level>=r.level,n=r===nextRew,used=!!r.used;
     const c=document.createElement('div');
     c.className='rcard'+(used?' used':(u?' unlocked':(n?' nextup':' locked')));
     c.innerHTML=`<div class="r-ico">${used?'<div class="r-stamp">✓</div>':''}${used?'🎁':(u?r.ico:'🔒')}</div><div class="r-name">${r.name}</div><div class="r-lvl">LVL ${r.level}</div><div class="r-tag ${used?'t-used':(u?'t-ok':(n?'t-next':'t-lock'))}">${used?'✓ Brugt':(u?'✓ Låst op':(n?'⭐ Næste':'🔒 Låst'))}</div>`;
@@ -2578,12 +2672,12 @@ function routineStatus(type){
 
   const cfg = {
     morning: {
-      open:  wknd ? 9*60+0  : 6*60+30,
+      open:  6*60+30,
       close: wknd ? 10*60+0 : 7*60+15,
       done:  ()=>S.morningDone.length>=MQ.length
     },
     evening: {
-      open:  19*60+30,
+      open:  19*60+0,
       close: wknd ? 22*60+0 : 20*60+0,
       done:  ()=>S.eveningDone.length>=EQ.length
     },
@@ -2600,7 +2694,7 @@ function getLockWindow(){
   // Låst: fra 20:15 (hverdag) / 22:15 (weekend) til morgenrutinen åbner
   const wknd = isWeekend();
   const lockFrom  = wknd ? 22*60+15 : 20*60+15;
-  const lockUntil = wknd ? 9*60+0   : 6*60+30;
+  const lockUntil = 6*60+30;
   return {lockFrom, lockUntil};
 }
 
@@ -2624,8 +2718,8 @@ function updateLockScreen(){
     const now  = new Date();
     const mins = now.getHours()*60 + now.getMinutes();
     const wknd = isWeekend();
-    const openMins  = wknd ? 9*60 : 6*60+30;
-    const openLabel = wknd ? '09:00' : '06:30';
+    const openMins  = 6*60+30;
+    const openLabel = '06:30';
     document.getElementById('lsOpenTime').textContent = openLabel;
     let minsUntil = openMins - mins;
     if(minsUntil <= 0) minsUntil += 24*60;
@@ -3137,6 +3231,7 @@ function dlbl(days){if(!days||days.length===7)return 'Alle';const n=['','M','Ti'
 
 function rAdm(){
   renderPendingList();
+  renderAdminStats();
   const dl=document.getElementById('aDList'),ol=document.getElementById('aOList'),rl=document.getElementById('aRList');
   dl.innerHTML=DQ.length?'':'<div class="empty">Ingen daglige missioner</div>';
   DQ.forEach(q=>dl.appendChild(mkAQ(q,'d')));
@@ -3152,8 +3247,10 @@ function rAdm(){
 function mkAQ(q,type){
   const it=document.createElement('div');it.className='aqi';
   const excused=(S.dailyExcused||[]).includes(q.id);
+  const wq=getWeeklyOptQuest();
+  const isWeekly=wq&&wq.id===q.id;
   it.innerHTML=`
-    <div class="aqi-ic">${excused?'⏭':q.ico}</div>
+    <div class="aqi-ic">${excused?'⏭':isWeekly?'⭐':q.ico}</div>
     <div class="aqi-b">
       <div class="aqi-n" style="${excused?'opacity:.5;text-decoration:line-through':''}">${q.name}</div>
       <div class="aqi-m">
@@ -3161,10 +3258,12 @@ function mkAQ(q,type){
         <span class="aqtag">${q.xp} XP</span>
         <span class="aqtag">${dlbl(q.days)}</span>
         ${excused?'<span class="aqtag" style="color:var(--y);border-color:rgba(255,229,102,.3)">⏭ Undtaget i dag</span>':''}
+        ${isWeekly?'<span class="aqtag" style="color:var(--y);border-color:rgba(255,229,102,.4)">⭐ Ugens quest</span>':''}
       </div>
     </div>
     <div class="aqi-acts">
-      ${type==='d'?`<button class="aib ${excused?'aib-u on':'aib-u'}" onclick="toggleExcuse('${q.id}')" title="${excused?'Fjern undtagelse':'Undtag i dag'}">${excused?'↩️':'⏭'}</button>`:''}
+      ${type==='d'?`<button class="aib ${excused?'aib-u on':'aib-u'}" onclick="toggleExcuse('${q.id}')">${excused?'↩️':'⏭'}</button>`:''}
+      ${type==='o'?`<button class="aib ${isWeekly?'aib-u on':'aib-u'}" onclick="setWeeklyOpt('${q.id}')" title="${isWeekly?'Fjern som ugens quest':'Sæt som ugens quest'}">${isWeekly?'⭐':'☆'}</button>`:''}
       <button class="aib aib-e" onclick="openEdit('${q.id}','${type}')">✏️</button>
       <button class="aib aib-d" onclick="delQ('${q.id}','${type}')">✕</button>
     </div>`;
@@ -3225,6 +3324,22 @@ function renderPendingList(){
       </div>`;
     list.appendChild(card);
   });
+}
+
+function setWeeklyOpt(id){
+  const currentWeek = `${new Date().getFullYear()}-w${getWeekNumber()}`;
+  if(S.weeklyOptId === id && S.weeklyOptWeek === currentWeek){
+    // Fjern som ugens quest
+    S.weeklyOptId   = null;
+    S.weeklyOptWeek = null;
+    popup('☆','UGENS QUEST FJERNET','Quest er tilbage i Ekstra','');
+  } else {
+    S.weeklyOptId   = id;
+    S.weeklyOptWeek = currentWeek;
+    const q=OQ.find(q=>q.id===id);
+    if(q) popup('⭐','UGENS QUEST VALGT!',q.name,'Vises nu i Dagens Missioner');
+  }
+  rDaily();rOpt();rAdm();saveState();
 }
 
 function delQ(id,t){const a=t==='d'?DQ:OQ;const i=a.findIndex(q=>q.id===id);if(i>-1)a.splice(i,1);rDaily();rOpt();rAdm();}
@@ -3467,6 +3582,8 @@ async function saveState(){
       opt_done:        S.optDone,
       opt_done_total:  S.optDoneTotal||0,
       last_routine_day:S.lastRoutineDay||'',
+      weekly_opt_id:   S.weeklyOptId||null,
+      weekly_opt_week: S.weeklyOptWeek||null,
       evening_bonus:  S.eveningBonus,
       opt_done:       S.optDone,
       lucky:          S.lucky,
@@ -3535,6 +3652,8 @@ async function loadState(){
       weeklyDays:     data.weekly_days     || {},
       weeklyLog:      data.weekly_log      || {},
       lastRoutineDay: data.last_routine_day|| '',
+      weeklyOptId:    data.weekly_opt_id   || null,
+      weeklyOptWeek:  data.weekly_opt_week || null,
       optDoneTotal:   data.opt_done_total  || 0,
       eveningBonus:   eveningBonus,
       optDone:        optDone,
