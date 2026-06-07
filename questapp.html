@@ -356,7 +356,9 @@ body::after{
 .rcard.nextup{border-color:rgba(160,80,255,.35);background:linear-gradient(135deg,var(--panel),rgba(160,80,255,.05));}
 .rcard.nextup::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--p),transparent);opacity:.5;}
 .rcard.locked{opacity:.35;}
-.rcard.used{opacity:.28;filter:grayscale(.8);}
+.rcard.used{opacity:.32;filter:grayscale(.6);}
+.rcard.pending{border-color:rgba(255,229,102,.45);background:linear-gradient(135deg,var(--panel),rgba(255,229,102,.05));animation:pulse-glow 2s ease-in-out infinite;}
+.rcard.pending::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--y),transparent);opacity:.7;}
 
 .r-ico{
   width:52px;height:52px;border-radius:14px;
@@ -375,7 +377,8 @@ body::after{
 .t-ok{color:var(--g);background:rgba(0,255,157,.09);border:1px solid rgba(0,255,157,.2);text-shadow:0 0 6px rgba(0,255,157,.5);}
 .t-next{color:var(--p);background:rgba(160,80,255,.09);border:1px solid rgba(160,80,255,.25);}
 .t-lock{color:var(--t2);background:rgba(255,255,255,.04);}
-.t-used{color:var(--t2);text-decoration:line-through;}
+.t-used{color:var(--t2);background:rgba(255,255,255,.04);border:1px solid var(--rim);}
+.t-pending{color:var(--y);background:rgba(255,229,102,.09);border:1px solid rgba(255,229,102,.3);}
 
 /* ══════════════════════════════════════════════
    BOTTOM NAV
@@ -2589,13 +2592,35 @@ function rOpt(){
 
 function rRew(){
   const sc=document.getElementById('rewSc');sc.innerHTML='';
-  // Find kun den første belønning der ikke er låst op endnu
   const nextRew = RW.find(r => S.level < r.level && !r.used);
-  RW.forEach(r=>{
-    const u=S.level>=r.level,n=r===nextRew,used=!!r.used;
+  RW.forEach((r,i)=>{
+    const u       = S.level >= r.level;
+    const n       = r === nextRew;
+    const used    = r.used && !r.used.pending;
+    const pending = r.used && r.used.pending;
+    const usedDate= used && r.used.date ? new Date(r.used.date).toLocaleDateString('da-DK',{day:'numeric',month:'short'}) : null;
+
     const c=document.createElement('div');
-    c.className='rcard'+(used?' used':(u?' unlocked':(n?' nextup':' locked')));
-    c.innerHTML=`<div class="r-ico">${used?'<div class="r-stamp">✓</div>':''}${used?'🎁':(u?r.ico:'🔒')}</div><div class="r-name">${r.name}</div><div class="r-lvl">LVL ${r.level}</div><div class="r-tag ${used?'t-used':(u?'t-ok':(n?'t-next':'t-lock'))}">${used?'✓ Brugt':(u?'✓ Låst op':(n?'⭐ Næste':'🔒 Låst'))}</div>`;
+    c.className='rcard'+(used?' used':(pending?' pending':(u?' unlocked':(n?' nextup':' locked'))));
+
+    let tagClass, tagText;
+    if(used)         { tagClass='t-used';    tagText = usedDate ? '✓ '+usedDate : '✓ Brugt'; }
+    else if(pending) { tagClass='t-pending';  tagText = '⏳ Venter...'; }
+    else if(u)       { tagClass='t-ok';       tagText = '✓ Låst op'; }
+    else if(n)       { tagClass='t-next';     tagText = '⭐ Næste'; }
+    else             { tagClass='t-lock';     tagText = '🔒 Låst'; }
+
+    const icoHtml = used
+      ? `<div class="r-stamp">✓</div>🎁`
+      : (pending ? `<div class="r-stamp" style="background:var(--y)">⏳</div>${r.ico}` : (u ? r.ico : '🔒'));
+
+    c.innerHTML=`
+      <div class="r-ico">${icoHtml}</div>
+      <div class="r-name">${r.name}</div>
+      <div class="r-lvl">LVL ${r.level}</div>
+      <div class="r-tag ${tagClass}">${tagText}</div>
+      ${u && !used && !pending ? `<button onclick="requestReward(${i})" style="margin-top:8px;width:100%;padding:7px 0;background:linear-gradient(135deg,var(--p),var(--pk));border:none;border-radius:10px;font-family:var(--o);font-size:9px;font-weight:700;letter-spacing:1px;color:#fff;cursor:pointer;box-shadow:0 0 12px var(--gp);">🎁 BRUG</button>`:''}
+    `;
     sc.appendChild(c);
   });
 }
@@ -2805,7 +2830,7 @@ function xpUp(amt,name,ico){
   const multi  = streakMultiplier();
   const lucky  = S.lucky ? 2 : 1;
   const actual = Math.round(amt * multi * lucky);
-  const old    = S.level;
+  const old    = curLvl().l;
   S.xp += actual;
   logXpToday(actual);
 
@@ -3239,8 +3264,29 @@ function rAdm(){
   OQ.forEach(q=>ol.appendChild(mkAQ(q,'o')));
   rl.innerHTML=RW.length?'':'<div class="empty">Ingen belønninger</div>';
   RW.forEach((r,i)=>{
-    const it=document.createElement('div');it.className='aqi';it.style.opacity=r.used?'0.45':'1';
-    it.innerHTML=`<div class="aqi-ic">${r.used?'✅':r.ico}</div><div class="aqi-b"><div class="aqi-n" style="${r.used?'text-decoration:line-through':''}">${r.name}</div><div class="aqi-m"><span class="aqtag">LVL ${r.level}</span>${r.used?'<span class="aqtag o">✓ Brugt</span>':''}</div></div><div class="aqi-acts"><button class="aib aib-u ${r.used?'on':''}" onclick="tRewUsed(${i})">${r.used?'↩️':'🎁'}</button><button class="aib aib-d" onclick="delRew(${i})">✕</button></div>`;
+    const used    = r.used && !r.used.pending;
+    const pending = r.used && r.used.pending;
+    const usedDate= used && r.used.date ? new Date(r.used.date).toLocaleDateString('da-DK',{day:'numeric',month:'short',year:'numeric'}) : null;
+    const it=document.createElement('div');it.className='aqi';it.style.opacity=used?'0.5':'1';
+    if(pending){ it.style.background='linear-gradient(135deg,rgba(255,229,102,.07),rgba(255,40,180,.04))'; it.style.border='1px solid rgba(255,229,102,.4)'; it.style.borderRadius='13px'; }
+    it.innerHTML=`
+      <div class="aqi-ic">${used?'✅':(pending?'⏳':r.ico)}</div>
+      <div class="aqi-b">
+        <div class="aqi-n" style="${used?'text-decoration:line-through;opacity:.6':''}">${r.name}</div>
+        <div class="aqi-m">
+          <span class="aqtag">LVL ${r.level}</span>
+          ${used    ? `<span class="aqtag o">✓ Brugt ${usedDate||''}</span>` : ''}
+          ${pending ? `<span class="aqtag" style="color:var(--y);border-color:rgba(255,229,102,.3)">⏳ Afventer godkendelse</span>` : ''}
+        </div>
+      </div>
+      <div class="aqi-acts">
+        ${pending
+          ? `<button class="pend-ok" onclick="approveReward(${i})" title="Godkend">✓</button>
+             <button class="pend-no" onclick="rejectReward(${i})" title="Afvis">✕</button>`
+          : `<button class="aib aib-u ${used?'on':''}" onclick="tRewUsed(${i})" title="${used?'Nulstil':'Marker som brugt'}">${used?'↩️':'🎁'}</button>`
+        }
+        <button class="aib aib-d" onclick="delRew(${i})">✕</button>
+      </div>`;
     rl.appendChild(it);
   });
 }
@@ -3270,7 +3316,9 @@ function mkAQ(q,type){
   return it;
 }
 function updateAdminBadge(){
-  const count=(S.dailyPending||[]).length;
+  const questPending  = (S.dailyPending||[]).length;
+  const rewardPending = RW.filter(r=>r.used && r.used.pending).length;
+  const count = questPending + rewardPending;
   const badge=document.getElementById('adminBadge');
   if(badge) badge.style.display=count>0?'block':'none';
 }
@@ -3364,8 +3412,30 @@ function toggleExcuse(id){
     },400);
   }
 }
+function requestReward(i){
+  if(!RW[i] || RW[i].used) return;
+  RW[i].used = { pending: true, requestedAt: new Date().toISOString() };
+  rRew(); rAdm(); saveState();
+  popup(RW[i].ico,'ANMODNING SENDT!',RW[i].name,'Venter på forældrens godkendelse');
+}
+
+function approveReward(i){
+  if(!RW[i]) return;
+  RW[i].used = { pending: false, date: new Date().toISOString() };
+  rRew(); rAdm(); saveState(); sparks();
+  popup('🎉','BELØNNING GODKENDT!',RW[i].name,'God fornøjelse! 🎊');
+}
+
+function rejectReward(i){
+  if(!RW[i]) return;
+  const name = RW[i].name;
+  RW[i].used = null;
+  rRew(); rAdm(); saveState();
+  popup('❌','IKKE GODKENDT',name,'Tal med mor/far 😊');
+}
+
 function delRew(i){RW.splice(i,1);rRew();rAdm();}
-function tRewUsed(i){RW[i].used=!RW[i].used;rRew();rAdm();}
+function tRewUsed(i){RW[i].used = RW[i].used ? null : { pending:false, date: new Date().toISOString() }; rRew();rAdm();saveState();}
 function addRew(){
   const nm=document.getElementById('rNm2').value.trim();if(!nm)return;
   const lv=parseInt(document.getElementById('rLv2').value)||3;
@@ -3663,6 +3733,9 @@ async function loadState(){
       lastStreak:   data.last_streak  || null,
     };
 
+    // Synkroniser S.level med faktisk XP (retter mismatch)
+    { const realLvl = LEVELS.filter(l=>S.xp>=l.r).pop(); if(realLvl && realLvl.l > S.level) S.level = realLvl.l; }
+
     if(data.rewards && data.rewards.length > 0) {
       RW = data.rewards;
     }
@@ -3717,16 +3790,15 @@ async function boot(){
 let pollTimer = null;
 
 async function pollState(){
-  // Hent kun de felter der kan ændres af forældre
   try {
     const {data, error} = await sb
       .from('questzone_state')
-      .select('daily_done, daily_pending, daily_excused, updated_at')
+      .select('daily_done, daily_pending, daily_excused, rewards, updated_at')
       .eq('id', USER_ID)
       .single();
     if(error || !data) return;
 
-    // Tjek om der er sket ændringer siden sidst
+    // Tjek daily ændringer
     const newDone    = JSON.stringify(data.daily_done    || []);
     const newPending = JSON.stringify(data.daily_pending || []);
     const newExcused = JSON.stringify(data.daily_excused || []);
@@ -3738,16 +3810,14 @@ async function pollState(){
       S.dailyDone    = data.daily_done    || [];
       S.dailyPending = data.daily_pending || [];
       S.dailyExcused = data.daily_excused || [];
-      rDaily(); // opdater visningen
+      rDaily();
 
-      // Vis besked hvis en quest blev godkendt
       const nyGodkendt = (data.daily_done||[]).filter(id => !(JSON.parse(oldDone)||[]).includes(id));
       nyGodkendt.forEach(id => {
         const q = DQ.find(q => q.id === id);
         if(q) popup('✅', 'GODKENDT!', q.name, 'Forælder har godkendt din opgave');
       });
 
-      // Vis besked hvis en quest blev afvist (var pending, er ikke længere pending eller done)
       const oldPendingArr = JSON.parse(oldPending) || [];
       const nyAfvist = oldPendingArr.filter(id =>
         !(data.daily_pending||[]).includes(id) &&
@@ -3758,18 +3828,40 @@ async function pollState(){
         if(q) popup('❌', 'IKKE GODKENDT', q.name, 'Prøv igen!');
       });
 
-      // Tjek om alle nu er complete efter godkendelse
       if(allDailyComplete() && !S.wheelSpun){
         setTimeout(()=>{
           xpUp(30,'Dagens missioner fuldført!','⚡');
-          const b=document.getElementById('spinBanner');
-          b.style.display='flex';
+          document.getElementById('spinBanner').style.display='flex';
         },600);
         checkAchievements();
       }
     }
+
+    // Tjek reward ændringer (godkendelse fra forælder)
+    if(data.rewards && data.rewards.length > 0){
+      const oldRW = JSON.stringify(RW.map(r=>r.used));
+      const newRW = JSON.stringify((data.rewards||[]).map(r=>r.used));
+      if(oldRW !== newRW){
+        // Find belønninger der netop er blevet godkendt (pending→brugt)
+        data.rewards.forEach((r,i)=>{
+          const old = RW[i];
+          if(!old) return;
+          const wasP = old.used && old.used.pending;
+          const isA  = r.used && !r.used.pending;
+          if(wasP && isA){
+            popup('🎉','BELØNNING GODKENDT!', r.name, 'God fornøjelse! 🎊');
+            sparks();
+          }
+          const wasA = old.used && !old.used.pending;
+          const isNone = !r.used;
+          // ingen notification ved nulstil
+        });
+        RW = data.rewards;
+        rRew();
+      }
+    }
+
   } catch(e){
-    // Stil polling — intet der skal crashe appen
     console.warn('Poll fejl:', e.message);
   }
 }
